@@ -8,6 +8,8 @@ interface User {
   avatarUrl?: string;
 }
 
+const app = getApp<IAppOption>();
+
 Page({
   data: {
     username: '',
@@ -15,10 +17,54 @@ Page({
     existingUsers: [] as User[],
     top3: [] as any[],
     loading: false,
+    showPrivacyModal: false, // 隐私政策弹窗
   },
 
   onLoad() {
+    // 检查隐私政策同意状态
+    this.checkPrivacyAgreed();
+  },
+
+  onShow() {
+    // 每次显示页面时重新检查
+    this.checkPrivacyAgreed();
+  },
+
+  // 检查是否已同意隐私政策
+  checkPrivacyAgreed() {
+    const privacyAgreed = wx.getStorageSync('privacyAgreed');
+    if (!privacyAgreed) {
+      // 未同意隐私政策，显示弹窗
+      this.setData({ showPrivacyModal: true });
+    } else {
+      // 已同意，加载数据
+      this.loadData();
+    }
+  },
+
+  // 查看隐私政策
+  onViewPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
+  // 同意隐私政策
+  onAgreePrivacy() {
+    app.agreePrivacy();
+    this.setData({ showPrivacyModal: false });
     this.loadData();
+  },
+
+  // 拒绝隐私政策
+  onRejectPrivacy() {
+    wx.showModal({
+      title: '提示',
+      content: '您需要同意隐私政策才能使用本小程序',
+      showCancel: false,
+      confirmText: '重新阅读',
+      success: () => {
+        // 重新显示隐私政策
+      }
+    });
   },
 
   async loadData() {
@@ -51,6 +97,12 @@ Page({
   // 用户名登录/注册
   async onUsernameLogin() {
     const { username, isNewUser } = this.data;
+
+    // 再次检查隐私政策
+    if (!wx.getStorageSync('privacyAgreed')) {
+      this.setData({ showPrivacyModal: true });
+      return;
+    }
 
     if (!username.trim()) {
       wx.showToast({ title: '请输入用户名', icon: 'none' });
@@ -91,6 +143,12 @@ Page({
   async onSelectUser(e: any) {
     const { username } = e.currentTarget.dataset;
 
+    // 再次检查隐私政策
+    if (!wx.getStorageSync('privacyAgreed')) {
+      this.setData({ showPrivacyModal: true });
+      return;
+    }
+
     this.setData({ loading: true });
 
     try {
@@ -113,6 +171,12 @@ Page({
 
   // 微信一键登录
   async onWechatLogin() {
+    // 再次检查隐私政策
+    if (!wx.getStorageSync('privacyAgreed')) {
+      this.setData({ showPrivacyModal: true });
+      return;
+    }
+
     this.setData({ loading: true });
 
     try {

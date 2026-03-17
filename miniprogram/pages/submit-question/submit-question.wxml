@@ -1,0 +1,130 @@
+<!--pages/submit-question/submit-question.wxml-->
+<view class="container">
+  <!-- 投稿须知 -->
+  <view class="notice-bar" bindtap="onViewGuide">
+    <text class="notice-icon">📖</text>
+    <text class="notice-text">点击查看投稿须知</text>
+    <text class="notice-arrow">></text>
+  </view>
+
+  <!-- 表单区域 -->
+  <view class="form-section">
+    <!-- 标题 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">题目标题</text>
+        <text class="label-optional">（可选）</text>
+      </view>
+      <input 
+        class="form-input"
+        type="text"
+        placeholder="给题目起个名字"
+        maxlength="50"
+        value="{{title}}"
+        bindinput="onInputTitle"
+      />
+    </view>
+
+    <!-- 汤面 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">汤面</text>
+        <text class="label-required">*</text>
+        <text class="label-hint">（给玩家看的谜题）</text>
+      </view>
+      <textarea 
+        class="form-textarea"
+        placeholder="描述一个有趣的情境，引发玩家的好奇心...&#10;例如：一个人走进餐厅，点了一碗海龟汤，喝了一口后就自杀了。为什么？"
+        maxlength="500"
+        value="{{surface}}"
+        bindinput="onInputSurface"
+      />
+      <view class="char-count">{{surface.length}}/500</view>
+    </view>
+
+    <!-- 汤底 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">汤底</text>
+        <text class="label-required">*</text>
+        <text class="label-hint">（真实答案）</text>
+      </view>
+      <textarea 
+        class="form-textarea"
+        placeholder="揭示真相，要出人意料但合情合理...&#10;例如：这个人和妻子曾遭遇海难，漂流到荒岛。为了生存，同伴给他喝了一种'汤'说是海龟汤。后来他得知那天喝的其实是..."
+        maxlength="1000"
+        value="{{bottom}}"
+        bindinput="onInputBottom"
+      />
+      <view class="char-count">{{bottom.length}}/1000</view>
+    </view>
+
+    <!-- 分类 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">分类</text>
+        <text class="label-required">*</text>
+      </view>
+      <view class="category-list">
+        <view 
+          class="category-item {{category === item.value ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="value"
+          data-value="{{item.value}}"
+          bindtap="onSelectCategory"
+        >
+          <text class="category-name">{{item.label}}</text>
+          <text class="category-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提示 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">提示</text>
+        <text class="label-optional">（可选，最多3个）</text>
+      </view>
+      <view class="hints-list">
+        <view class="hint-item" wx:for="{{[0,1,2]}}" wx:key="*this">
+          <text class="hint-label">提示{{item + 1}}：</text>
+          <input 
+            class="hint-input"
+            type="text"
+            placeholder="由浅入深的提示"
+            maxlength="50"
+            value="{{hints[item]}}"
+            data-index="{{item}}"
+            bindinput="onInputHint"
+          />
+        </view>
+      </view>
+    </view>
+
+    <!-- 关键词 -->
+    <view class="form-item">
+      <view class="form-label">
+        <text class="label-text">关键词</text>
+        <text class="label-optional">（可选，用逗号分隔）</text>
+      </view>
+      <input 
+        class="form-input"
+        type="text"
+        placeholder="如：海龟汤, 自杀, 餐厅"
+        maxlength="100"
+        value="{{keywords}}"
+        bindinput="onInputKeywords"
+      />
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="submit-section">
+    <button class="submit-btn" bindtap="onSubmit" loading="{{submitting}}">
+      提交投稿
+    </button>
+    <view class="submit-tip">
+      <text>投稿后将进入审核队列，审核通过后自动加入题库</text>
+    </view>
+  </view>
+</view>

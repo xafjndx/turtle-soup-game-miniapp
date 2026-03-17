@@ -315,3 +315,55 @@ export const generateByAI = [
     }
   },
 ];
+
+// 用户投稿题目
+// 投稿的题目默认状态为 PENDING，需要管理员审核后才能上架
+export const submitQuestion = [
+  authMiddleware,
+  body('surface').notEmpty().withMessage('汤面不能为空'),
+  body('bottom').notEmpty().withMessage('汤底不能为空'),
+  body('category').isIn(['CLASSIC', 'HORROR', 'LOGIC', 'WARM']).withMessage('无效的分类'),
+  body('hints').isArray({ min: 1 }).withMessage('至少需要一个提示'),
+  body('keywords').isArray({ min: 1 }).withMessage('至少需要一个关键词'),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        error(res, ErrorCode.BAD_REQUEST, errors.array()[0].msg);
+        return;
+      }
+
+      const { title, surface, bottom, category, hints, keywords } = req.body;
+
+      logger.info(`用户投稿题目: userId=${req.userId}, title=${title || '无标题'}`);
+
+      // 创建题目，来源为 USER_SUBMITTED（需要在 Prisma schema 中添加）
+      // 暂时使用 PLATFORM 作为来源，状态设为 PENDING
+      const question = await questionService.create({
+        title,
+        surface,
+        bottom,
+        category: category as QuestionCategory,
+        hints,
+        keywords,
+        source: 'PLATFORM', // 用户投稿暂时标记为 PLATFORM
+      });
+
+      // ⚠️ 重要：用户投稿的题目默认状态为 PENDING
+      // 需要管理员在后台审核通过后才能被抽取
+      await questionService.update(question.id, { status: 'PENDING' });
+
+      logger.info(`用户投稿成功: id=${question.id}, 状态=PENDING（待审核）`);
+
+      success(res, {
+        id: question.id,
+        message: '投稿成功！您的题目已提交审核，审核通过后将自动加入题库。',
+        status: 'PENDING',
+      }, '投稿成功，请等待审核');
+    } catch (err) {
+      logger.error('用户投稿失败:', err);
+      next(err);
+    }
+  },
+];

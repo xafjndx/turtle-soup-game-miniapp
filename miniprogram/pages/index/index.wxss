@@ -161,6 +161,48 @@
   border: none;
 }
 
+/* 投稿入口 */
+.submit-section {
+  margin-top: 30rpx;
+}
+
+.submit-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #fff5e6, #ffe8cc);
+  padding: 30rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #ffd699;
+}
+
+.submit-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.submit-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.submit-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #ff8c00;
+}
+
+.submit-desc {
+  font-size: 24rpx;
+  color: #cc7000;
+  margin-top: 4rpx;
+}
+
+.submit-arrow {
+  font-size: 32rpx;
+  color: #ff8c00;
+}
+
 .leaderboard-section {
   margin-top: 50rpx;
   background: #fff;

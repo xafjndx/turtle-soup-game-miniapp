@@ -27,6 +27,7 @@ router.get('/question/categories', questionController.getCategories);
 // 需要登录的路由
 router.get('/question/draw', questionController.drawQuestion);
 router.get('/question/:id', questionController.getQuestionDetail);
+router.post('/question/submit', authMiddleware, questionController.submitQuestion);  // 用户投稿
 
 // AI 生成题目（管理员）
 router.post('/question/generate', authMiddleware, questionController.generateByAI);
@@ -60,7 +61,7 @@ router.put('/admin/question/:id/quality', authMiddleware, adminController.update
 router.post('/admin/questions/delete', authMiddleware, adminController.batchDeleteQuestions);
 router.post('/admin/questions/restore', authMiddleware, adminController.restoreQuestions);
 
-// 爬虫管理（已禁用）
+// 爬虫管理（已禁用，保留接口但返回禁用提示）
 router.post('/admin/crawler/trigger', authMiddleware, adminController.triggerCrawler);
 
 // 操作日志

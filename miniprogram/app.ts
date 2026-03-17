@@ -4,9 +4,12 @@ App<{
     userInfo: any;
     token: string;
     baseUrl: string;
+    privacyAgreed: boolean;
   };
   onLaunch(): void;
   checkLogin(): boolean;
+  checkPrivacy(): boolean;
+  agreePrivacy(): void;
   login(): Promise<void>;
   logout(): void;
 }>({
@@ -14,11 +17,28 @@ App<{
     userInfo: null,
     token: '',
     baseUrl: 'https://your-domain.com/api', // 替换为实际后端地址
+    privacyAgreed: false,
   },
 
   onLaunch() {
+    // 检查隐私政策同意状态
+    this.checkPrivacy();
     // 检查登录状态
     this.checkLogin();
+  },
+
+  // 检查隐私政策是否已同意
+  checkPrivacy(): boolean {
+    const privacyAgreed = wx.getStorageSync('privacyAgreed');
+    this.globalData.privacyAgreed = !!privacyAgreed;
+    return !!privacyAgreed;
+  },
+
+  // 同意隐私政策
+  agreePrivacy() {
+    this.globalData.privacyAgreed = true;
+    wx.setStorageSync('privacyAgreed', true);
+    wx.setStorageSync('privacyAgreedAt', new Date().toISOString());
   },
 
   // 检查是否已登录

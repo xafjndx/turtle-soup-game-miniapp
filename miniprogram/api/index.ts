@@ -100,6 +100,28 @@ export function getQuestionDetail(id: string): Promise<Question> {
   return get<Question>(`/question/${id}`);
 }
 
+// ==================== 用户投稿 ====================
+
+export interface SubmitQuestionData {
+  title?: string;
+  surface: string;
+  bottom: string;
+  category: QuestionCategory;
+  hints: string[];
+  keywords: string[];
+}
+
+export interface SubmitQuestionResult {
+  id: string;
+  message: string;
+  status: 'PENDING';
+}
+
+// 用户投稿题目
+export function submitQuestion(data: SubmitQuestionData): Promise<SubmitQuestionResult> {
+  return post<SubmitQuestionResult>('/question/submit', data);
+}
+
 // ==================== 游戏相关 ====================
 
 export type InputMode = 'VOICE' | 'TEXT';

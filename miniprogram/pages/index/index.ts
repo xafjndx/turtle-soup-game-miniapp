@@ -91,4 +91,18 @@ Page({
   onViewProfile() {
     wx.switchTab({ url: '/pages/profile/profile' });
   },
+
+  // 跳转投稿页面
+  onSubmitQuestion() {
+    // 检查登录
+    const token = wx.getStorageSync('token');
+    if (!token) {
+      wx.showToast({ title: '请先登录', icon: 'none' });
+      setTimeout(() => {
+        wx.navigateTo({ url: '/pages/login/login' });
+      }, 1000);
+      return;
+    }
+    wx.navigateTo({ url: '/pages/submit-question/submit-question' });
+  },
 });

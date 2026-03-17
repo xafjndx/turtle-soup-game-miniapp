@@ -284,6 +284,7 @@ export const endGame = [
 ];
 
 // AI 题目入库
+// ⚠️ 重要：AI生成的题目需要管理员审核后才能上架
 export const saveAIQuestion = [
   authMiddleware,
   param('sessionId').isString().withMessage('无效的会话ID'),
@@ -308,12 +309,17 @@ export const saveAIQuestion = [
         return;
       }
 
-      // 更新题目状态为 APPROVED
+      // 更新题目状态为 PENDING（待审核）
+      // ⚠️ AI生成的题目需要管理员审核后才能上架
       await questionService.update(session.questionId, {
-        status: 'APPROVED',
+        status: 'PENDING',
       });
 
-      success(res, { message: '题目已加入题库' });
+      success(res, { 
+        message: '题目已提交，等待管理员审核后加入题库',
+        status: 'PENDING',
+        needReview: true,
+      });
     } catch (err) {
       next(err);
     }
