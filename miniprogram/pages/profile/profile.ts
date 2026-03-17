@@ -1,11 +1,12 @@
 // pages/profile/profile.ts
-import { getUserProfile, getGameHistory } from '../../api/index';
+import { getUserProfile, getGameHistory, checkIsAdmin } from '../../api/index';
 
 Page({
   data: {
     userInfo: null as any,
     history: [] as any[],
     loading: true,
+    isAdmin: false,
   },
 
   onLoad() {
@@ -18,12 +19,16 @@ Page({
 
   async loadData() {
     try {
-      const userInfo = await getUserProfile();
-      const history = await getGameHistory(10);
+      const [userInfo, history, adminInfo] = await Promise.all([
+        getUserProfile(),
+        getGameHistory(10),
+        checkIsAdmin().catch(() => ({ isAdmin: false })),
+      ]);
       
       this.setData({
         userInfo,
         history,
+        isAdmin: adminInfo.isAdmin,
         loading: false,
       });
     } catch (err) {
@@ -50,6 +55,16 @@ Page({
   // 查看排行榜
   onViewLeaderboard() {
     wx.switchTab({ url: '/pages/leaderboard/leaderboard' });
+  },
+
+  // 进入管理后台
+  onEnterAdmin() {
+    wx.navigateTo({ url: '/pages/admin/admin' });
+  },
+
+  // 查看隐私政策
+  onViewPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
   },
 
   // 下拉刷新

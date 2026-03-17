@@ -6,7 +6,8 @@
     "pages/profile/profile",
     "pages/leaderboard/leaderboard",
     "pages/privacy/privacy",
-    "pages/submit-question/submit-question"
+    "pages/submit-question/submit-question",
+    "pages/admin/admin"
   ],
   "window": {
     "backgroundTextStyle": "light",

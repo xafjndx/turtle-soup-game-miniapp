@@ -33,6 +33,27 @@
     </view>
   </view>
 
+  <!-- 管理后台入口（仅管理员可见） -->
+  <view class="admin-section" wx:if="{{isAdmin}}" bindtap="onEnterAdmin">
+    <view class="admin-card">
+      <text class="admin-icon">⚙️</text>
+      <view class="admin-info">
+        <text class="admin-title">管理后台</text>
+        <text class="admin-desc">审核题目、查看数据</text>
+      </view>
+      <text class="admin-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="onViewPrivacy">
+      <text class="menu-icon">🔒</text>
+      <text class="menu-text">隐私政策</text>
+      <text class="menu-arrow">></text>
+    </view>
+  </view>
+
   <!-- 详细统计 -->
   <view class="detail-section">
     <view class="section-title">详细数据</view>

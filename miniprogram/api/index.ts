@@ -38,6 +38,11 @@ export function getUserProfile(): Promise<User> {
   return get<User>('/user/profile');
 }
 
+// 检查是否是管理员
+export function checkIsAdmin(): Promise<{ isAdmin: boolean; role: string | null; permissions: string[] }> {
+  return get<{ isAdmin: boolean; role: string | null; permissions: string[] }>('/user/isAdmin');
+}
+
 // 获取账号列表
 export function getUserList(): Promise<User[]> {
   return get<User[]>('/user/list');
@@ -120,6 +125,40 @@ export interface SubmitQuestionResult {
 // 用户投稿题目
 export function submitQuestion(data: SubmitQuestionData): Promise<SubmitQuestionResult> {
   return post<SubmitQuestionResult>('/question/submit', data);
+}
+
+// ==================== 管理员功能 ====================
+
+export interface AdminStats {
+  users: { total: number; active: number };
+  questions: { total: number; pending: number; softDeleted: number; byCategory: Record<string, number>; bySource: Record<string, number> };
+  games: { total: number; today: number; winRate: string };
+}
+
+export interface AdminQuestion {
+  id: string;
+  title?: string;
+  surface: string;
+  bottom: string;
+  category: string;
+  source: string;
+  status: string;
+  createdAt: string;
+}
+
+// 获取管理统计数据
+export function getAdminStatistics(): Promise<AdminStats> {
+  return get<AdminStats>('/admin/statistics');
+}
+
+// 获取待审核题目列表
+export function getPendingQuestions(pageSize = 10): Promise<AdminQuestion[]> {
+  return get<AdminQuestion[]>('/admin/questions', { status: 'PENDING', pageSize });
+}
+
+// 更新题目状态
+export function updateQuestionStatus(id: string, status: string): Promise<void> {
+  return put<void>(`/admin/question/${id}/status`, { status });
 }
 
 // ==================== 游戏相关 ====================

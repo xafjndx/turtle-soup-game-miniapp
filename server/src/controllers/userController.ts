@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import userService from '../services/userService';
+import prisma from '../utils/prisma';
 import { success, error, ErrorCode } from '../utils/response';
 import { generateToken } from '../middlewares/auth';
 
@@ -148,3 +149,26 @@ export const updateProfile = [
     }
   },
 ];
+
+// 检查用户是否是管理员
+export const checkAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.userId) {
+      error(res, ErrorCode.UNAUTHORIZED, '请先登录');
+      return;
+    }
+
+    // 查询用户是否在 Admin 表中
+    const admin = await prisma.admin.findUnique({
+      where: { userId: req.userId },
+    });
+
+    success(res, {
+      isAdmin: !!admin,
+      role: admin?.role || null,
+      permissions: admin?.permissions ? JSON.parse(admin.permissions) : [],
+    });
+  } catch (err) {
+    next(err);
+  }
+};

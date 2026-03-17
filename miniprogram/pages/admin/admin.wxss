@@ -1,0 +1,169 @@
+/* pages/admin/admin.wxss */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 20rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+/* 统计概览 */
+.stats-section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16rpx;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  text-align: center;
+}
+
+.stat-card.highlight {
+  background: #fff3e0;
+}
+
+.stat-value {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-card.highlight .stat-value {
+  color: #ff9800;
+}
+
+.stat-label {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 待审核题目 */
+.review-section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 60rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.question-card {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  border: 1rpx solid #eee;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.question-source {
+  font-size: 22rpx;
+  color: #667eea;
+  background: #e8e4ff;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.question-category {
+  font-size: 22rpx;
+  color: #666;
+}
+
+.question-row {
+  margin-bottom: 12rpx;
+}
+
+.question-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-right: 8rpx;
+}
+
+.question-text {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+}
+
+.question-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.btn-reject, .btn-approve {
+  flex: 1;
+  height: 64rpx;
+  font-size: 26rpx;
+  border-radius: 8rpx;
+  border: none;
+}
+
+.btn-reject {
+  background: #fff;
+  color: #ff4d4f;
+  border: 1rpx solid #ff4d4f;
+}
+
+.btn-approve {
+  background: #52c41a;
+  color: #fff;
+}
+
+.btn-reject::after, .btn-approve::after {
+  border: none;
+}
+
+/* 提示信息 */
+.tip-section {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #999;
+}

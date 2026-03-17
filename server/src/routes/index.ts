@@ -18,6 +18,7 @@ router.get('/leaderboard', userController.getLeaderboard);
 // 需要登录的路由
 router.get('/user/profile', authMiddleware, userController.getProfile);
 router.put('/user/profile', authMiddleware, userController.updateProfile);
+router.get('/user/isAdmin', authMiddleware, userController.checkAdmin);  // 检查是否是管理员
 
 // ==================== 题目相关路由 ====================
 
