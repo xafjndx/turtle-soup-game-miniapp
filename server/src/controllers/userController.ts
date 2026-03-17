@@ -172,3 +172,120 @@ export const checkAdmin = async (req: Request, res: Response, next: NextFunction
     next(err);
   }
 };
+
+// 导出用户数据
+export const exportUserData = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.userId) {
+      error(res, ErrorCode.UNAUTHORIZED, '请先登录');
+      return;
+    }
+
+    // 获取用户基本信息
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: {
+        id: true,
+        username: true,
+        nickname: true,
+        avatarUrl: true,
+        createdAt: true,
+        totalGames: true,
+        winCount: true,
+        hitRate: true,
+        totalPlayTime: true,
+        avgPlayTime: true,
+        maxPlayTime: true,
+        totalHintsUsed: true,
+        avgHintsPerGame: true,
+        lastPlayedAt: true,
+      },
+    });
+
+    if (!user) {
+      error(res, ErrorCode.USER_NOT_FOUND, '用户不存在');
+      return;
+    }
+
+    // 获取游戏历史
+    const gameHistory = await prisma.gameHistory.findMany({
+      where: { userId: req.userId },
+      include: {
+        question: {
+          select: {
+            surface: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { playedAt: 'desc' },
+    });
+
+    // 组装导出数据
+    const exportData = {
+      exportTime: new Date().toISOString(),
+      user: user,
+      gameHistory: gameHistory.map(h => ({
+        playedAt: h.playedAt,
+        result: h.result,
+        playTime: h.playTime,
+        hitRate: h.hitRate,
+        hintUsed: h.hintUsed,
+        question: h.question.surface,
+        category: h.question.category,
+      })),
+    };
+
+    success(res, exportData);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 注销账号（删除用户数据）
+export const deleteAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.userId) {
+      error(res, ErrorCode.UNAUTHORIZED, '请先登录');
+      return;
+    }
+
+    // 获取用户信息用于确认
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+    });
+
+    if (!user) {
+      error(res, ErrorCode.USER_NOT_FOUND, '用户不存在');
+      return;
+    }
+
+    // 删除用户的所有数据（级联删除）
+    // 1. 删除游戏历史
+    await prisma.gameHistory.deleteMany({
+      where: { userId: req.userId },
+    });
+
+    // 2. 删除游戏会话
+    await prisma.gameSession.deleteMany({
+      where: { userId: req.userId },
+    });
+
+    // 3. 删除管理员记录（如果有）
+    await prisma.admin.deleteMany({
+      where: { userId: req.userId },
+    });
+
+    // 4. 删除用户
+    await prisma.user.delete({
+      where: { id: req.userId },
+    });
+
+    success(res, { 
+      message: '账号已注销，所有数据已删除',
+      deletedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    next(err);
+  }
+};

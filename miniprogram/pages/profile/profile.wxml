@@ -52,6 +52,16 @@
       <text class="menu-text">隐私政策</text>
       <text class="menu-arrow">></text>
     </view>
+    <view class="menu-item" bindtap="onExportData">
+      <text class="menu-icon">📤</text>
+      <text class="menu-text">导出我的数据</text>
+      <text class="menu-arrow">></text>
+    </view>
+    <view class="menu-item danger" bindtap="onShowDeleteModal">
+      <text class="menu-icon">🗑️</text>
+      <text class="menu-text">注销账号</text>
+      <text class="menu-arrow">></text>
+    </view>
   </view>
 
   <!-- 详细统计 -->
@@ -102,5 +112,28 @@
   <!-- 退出登录 -->
   <view class="logout-section">
     <button class="btn-logout" bindtap="onLogout">退出登录</button>
+  </view>
+</view>
+
+<!-- 注销账号确认弹窗 -->
+<view class="modal-mask" wx:if="{{showDeleteModal}}" catchtouchmove="true">
+  <view class="modal-content">
+    <view class="modal-header">
+      <text class="modal-title">⚠️ 注销账号</text>
+    </view>
+    <view class="modal-body">
+      <text class="modal-text">您正在申请注销账号，注销后：</text>
+      <view class="modal-list">
+        <text class="modal-item">• 您的所有个人信息将被删除</text>
+        <text class="modal-item">• 游戏记录将无法恢复</text>
+        <text class="modal-item">• 排行榜数据将被清除</text>
+        <text class="modal-item">• 此操作不可撤销</text>
+      </view>
+      <text class="modal-warning">确定要注销账号吗？</text>
+    </view>
+    <view class="modal-footer">
+      <button class="modal-btn cancel" bindtap="onHideDeleteModal">取消</button>
+      <button class="modal-btn confirm" bindtap="onConfirmDelete">确认注销</button>
+    </view>
   </view>
 </view>

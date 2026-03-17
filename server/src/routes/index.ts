@@ -18,7 +18,9 @@ router.get('/leaderboard', userController.getLeaderboard);
 // 需要登录的路由
 router.get('/user/profile', authMiddleware, userController.getProfile);
 router.put('/user/profile', authMiddleware, userController.updateProfile);
-router.get('/user/isAdmin', authMiddleware, userController.checkAdmin);  // 检查是否是管理员
+router.get('/user/isAdmin', authMiddleware, userController.checkAdmin);
+router.get('/user/export', authMiddleware, userController.exportUserData);  // 导出数据
+router.delete('/user/delete', authMiddleware, userController.deleteAccount);  // 注销账号
 
 // ==================== 题目相关路由 ====================
 

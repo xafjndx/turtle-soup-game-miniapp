@@ -43,6 +43,20 @@ export function checkIsAdmin(): Promise<{ isAdmin: boolean; role: string | null;
   return get<{ isAdmin: boolean; role: string | null; permissions: string[] }>('/user/isAdmin');
 }
 
+// 导出用户数据
+export function exportUserData(): Promise<{
+  exportTime: string;
+  user: User;
+  gameHistory: any[];
+}> {
+  return get('/user/export');
+}
+
+// 注销账号
+export function deleteAccount(): Promise<{ message: string; deletedAt: string }> {
+  return del('/user/delete');
+}
+
 // 获取账号列表
 export function getUserList(): Promise<User[]> {
   return get<User[]>('/user/list');

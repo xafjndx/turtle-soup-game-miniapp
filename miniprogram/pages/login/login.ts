@@ -17,7 +17,8 @@ Page({
     existingUsers: [] as User[],
     top3: [] as any[],
     loading: false,
-    showPrivacyModal: false, // 隐私政策弹窗
+    showPrivacyModal: true, // 默认显示隐私政策弹窗
+    privacyChecked: false, // 是否已检查过隐私政策状态
   },
 
   onLoad() {
@@ -33,12 +34,21 @@ Page({
   // 检查是否已同意隐私政策
   checkPrivacyAgreed() {
     const privacyAgreed = wx.getStorageSync('privacyAgreed');
-    if (!privacyAgreed) {
-      // 未同意隐私政策，显示弹窗
-      this.setData({ showPrivacyModal: true });
-    } else {
-      // 已同意，加载数据
+    
+    if (privacyAgreed) {
+      // 已同意，隐藏弹窗，加载数据
+      this.setData({ 
+        showPrivacyModal: false, 
+        privacyChecked: true 
+      });
       this.loadData();
+    } else {
+      // 未同意，显示弹窗
+      this.setData({ 
+        showPrivacyModal: true, 
+        privacyChecked: true 
+      });
+      // 不加载数据，等待用户同意
     }
   },
 
@@ -57,17 +67,32 @@ Page({
   // 拒绝隐私政策
   onRejectPrivacy() {
     wx.showModal({
-      title: '提示',
-      content: '您需要同意隐私政策才能使用本小程序',
-      showCancel: false,
+      title: '温馨提示',
+      content: '您需要同意《用户协议》和《隐私政策》才能使用本小程序的服务。\n\n如果您不同意，将无法使用本小程序的功能。',
       confirmText: '重新阅读',
-      success: () => {
-        // 重新显示隐私政策
+      cancelText: '退出',
+      success: (res) => {
+        if (res.cancel) {
+          // 用户选择退出
+          app.rejectPrivacy();
+          // 退出小程序（实际无法真正退出，只能提示）
+          wx.showToast({
+            title: '您拒绝了隐私政策',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+        // 如果点击"重新阅读"，弹窗继续保持
       }
     });
   },
 
   async loadData() {
+    // 只有同意隐私政策后才加载数据
+    if (!wx.getStorageSync('privacyAgreed')) {
+      return;
+    }
+    
     try {
       const [users, top3] = await Promise.all([
         getUserList(),

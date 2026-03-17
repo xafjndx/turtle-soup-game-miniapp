@@ -7,6 +7,7 @@ App<{
     privacyAgreed: boolean;
   };
   onLaunch(): void;
+  onShow(): void;
   checkLogin(): boolean;
   checkPrivacy(): boolean;
   agreePrivacy(): void;
@@ -22,9 +23,21 @@ App<{
 
   onLaunch() {
     // 检查隐私政策同意状态
-    this.checkPrivacy();
+    const privacyAgreed = this.checkPrivacy();
+    
+    // 如果未同意隐私政策，不执行后续登录检查
+    if (!privacyAgreed) {
+      console.log('用户未同意隐私政策，等待用户同意');
+      return;
+    }
+
     // 检查登录状态
     this.checkLogin();
+  },
+
+  onShow() {
+    // 每次显示时检查隐私政策状态
+    this.checkPrivacy();
   },
 
   // 检查隐私政策是否已同意
@@ -39,6 +52,18 @@ App<{
     this.globalData.privacyAgreed = true;
     wx.setStorageSync('privacyAgreed', true);
     wx.setStorageSync('privacyAgreedAt', new Date().toISOString());
+    
+    // 同意后再检查登录状态
+    this.checkLogin();
+  },
+
+  // 拒绝隐私政策（清除数据）
+  rejectPrivacy() {
+    this.globalData.privacyAgreed = false;
+    wx.removeStorageSync('privacyAgreed');
+    wx.removeStorageSync('privacyAgreedAt');
+    // 清除所有用户数据
+    wx.clearStorageSync();
   },
 
   // 检查是否已登录
@@ -88,5 +113,13 @@ App<{
     this.globalData.userInfo = null;
     wx.removeStorageSync('token');
     wx.removeStorageSync('userInfo');
+  },
+
+  // 注销账号（删除所有数据）
+  deleteAccount() {
+    this.globalData.token = '';
+    this.globalData.userInfo = null;
+    this.globalData.privacyAgreed = false;
+    wx.clearStorageSync();
   },
 });
