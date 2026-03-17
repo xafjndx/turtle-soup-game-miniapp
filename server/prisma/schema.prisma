@@ -1,6 +1,3 @@
-// Prisma Schema for 海龟汤游戏 (SQLite 开发版)
-// 生产环境请使用 MySQL 版本
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,32 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ==================== 用户相关 ====================
-
 model User {
-  id        String   @id @default(uuid())
-  openId    String?  @unique
-  username  String   @unique
-  nickname  String?
-  avatarUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // 统计数据（时间单位为分钟）
-  totalGames     Int     @default(0)
-  winCount       Int     @default(0)
-  hitRate        Float   @default(0)
-  totalPlayTime  Float   @default(0)
-  avgPlayTime    Float   @default(0)
-  maxPlayTime    Float   @default(0)
-  totalHintsUsed Int     @default(0)
-  avgHintsPerGame Float  @default(0)
-  lastPlayedAt   DateTime?
-
-  // 关联
-  gameHistories GameHistory[]
-  gameSessions  GameSession[]
-  admin         Admin?
+  id              String        @id @default(uuid())
+  openId          String?       @unique
+  username        String        @unique
+  nickname        String?
+  avatarUrl       String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  totalGames      Int           @default(0)
+  winCount        Int           @default(0)
+  hitRate         Float         @default(0)
+  totalPlayTime   Float         @default(0)
+  avgPlayTime     Float         @default(0)
+  maxPlayTime     Float         @default(0)
+  totalHintsUsed  Int           @default(0)
+  avgHintsPerGame Float         @default(0)
+  lastPlayedAt    DateTime?
+  admin           Admin?
+  gameHistories   GameHistory[]
+  gameSessions    GameSession[]
 
   @@index([hitRate, totalGames, avgPlayTime])
   @@map("users")
@@ -47,46 +38,32 @@ model Admin {
   role        String   @default("SUPER")
   permissions String   @default("[\"ALL\"]")
   createdAt   DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("admins")
 }
 
-// ==================== 题目相关 ====================
-
 model Question {
-  id        String  @id @default(uuid())
-  title     String?
-  surface   String
-  bottom    String
-  category  String  @default("CLASSIC")
-  hints     String  // JSON 字符串
-  keywords  String  // JSON 字符串
-  
-  // 来源信息
-  source    String  @default("PLATFORM")
-  
-  // AI生成标记
+  id            String        @id @default(uuid())
+  title         String?
+  surface       String
+  bottom        String
+  category      String        @default("CLASSIC")
+  hints         String
+  keywords      String
+  source        String        @default("PLATFORM")
   aiGeneratedBy String?
   aiGeneratedAt DateTime?
-  
-  // 爬虫标记
-  crawlSource String?
-  crawlUrl    String?
-  crawledAt   DateTime?
-  addedAt     DateTime?
-  
-  // 状态与评分
-  status        String   @default("APPROVED")
+  crawlSource   String?
+  crawlUrl      String?
+  crawledAt     DateTime?
+  addedAt       DateTime?
+  status        String        @default("APPROVED")
   softDeletedAt DateTime?
-  quality       Int      @default(3)
-  playCount     Int      @default(0)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // 关联
+  quality       Int           @default(3)
+  playCount     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   gameHistories GameHistory[]
   gameSessions  GameSession[]
 
@@ -95,73 +72,66 @@ model Question {
   @@map("questions")
 }
 
-// ==================== 游戏记录 ====================
-
 model GameHistory {
-  id            String   @id @default(uuid())
-  userId        String
-  questionId    String
-  playedAt      DateTime @default(now())
-  result        String   // WIN | LOSE | QUIT
-  hitRate       Float    @default(0)
-  playTime      Float    @default(0)
-  hintUsed      Int      @default(0)
-  revealedAnswer Boolean @default(false)
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid())
+  userId         String
+  questionId     String
+  playedAt       DateTime @default(now())
+  result         String
+  hitRate        Float    @default(0)
+  playTime       Float    @default(0)
+  hintUsed       Int      @default(0)
+  revealedAnswer Boolean  @default(false)
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, playedAt])
   @@map("game_histories")
 }
 
 model GameSession {
-  id              String    @id @default(uuid())
-  userId          String
-  questionId      String
-  questionSource  String    @default("BANK")
-  status          String    @default("ONGOING")
-  hintUsed        Int       @default(0)
-  hintRemaining   Int       @default(3)
-  inputMode       String?
-  result          String?
-  hitRate         Float?
-  revealedAnswer  Boolean   @default(false)
-  startedAt       DateTime  @default(now())
-  endedAt         DateTime?
-  totalTime       Float?
-
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  rounds   Round[]
+  id             String    @id @default(uuid())
+  userId         String
+  questionId     String
+  questionSource String    @default("BANK")
+  status         String    @default("ONGOING")
+  hintUsed       Int       @default(0)
+  hintRemaining  Int       @default(3)
+  inputMode      String?
+  result         String?
+  hitRate        Float?
+  revealedAnswer Boolean   @default(false)
+  startedAt      DateTime  @default(now())
+  endedAt        DateTime?
+  totalTime      Float?
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rounds         Round[]
 
   @@index([userId, status])
   @@map("game_sessions")
 }
 
 model Round {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   sessionId     String
   roundNumber   Int
-  inputMode     String   // VOICE | TEXT
+  inputMode     String
   playerInput   String
   inputAudioUrl String?
-  answerType    String?  // YES | NO | IRRELEVANT | PARTIAL | CORRECT
+  answerType    String?
   aiResponse    String?
-  action        String   // ASK | GUESS | HINT | QUIT
-  createdAt     DateTime @default(now())
-
-  session GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  action        String
+  createdAt     DateTime    @default(now())
+  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, roundNumber])
   @@map("rounds")
 }
 
-// ==================== 提示词库 ====================
-
 model PromptLibrary {
   id          String   @id @default(uuid())
-  category    String   // CLASSIC | HORROR | LOGIC | WARM
+  category    String
   prompt      String
   usageCount  Int      @default(0)
   generatedBy String   @default("AI_AUTO")
@@ -172,25 +142,21 @@ model PromptLibrary {
   @@map("prompt_library")
 }
 
-// ==================== 系统配置 ====================
-
 model SystemConfig {
   id        String   @id @default(uuid())
   key       String   @unique
-  value     String   // JSON 字符串
+  value     String
   updatedAt DateTime @updatedAt
 
   @@map("system_configs")
 }
-
-// ==================== 操作日志 ====================
 
 model OperationLog {
   id        String   @id @default(uuid())
   adminId   String
   action    String
   target    String?
-  detail    String?  // JSON 字符串
+  detail    String?
   createdAt DateTime @default(now())
 
   @@index([adminId, createdAt])

@@ -101,7 +101,7 @@ class AIService {
 
     const prompt = `汤面：${question.surface}
 汤底：${question.bottom}
-关键词：${question.keywords.join('、')}
+关键词：${Array.isArray(question.keywords) ? question.keywords.join('、') : JSON.parse(question.keywords || '[]').join('、')}
 
 玩家${isGuess ? '猜测' : '提问'}：${playerInput}
 

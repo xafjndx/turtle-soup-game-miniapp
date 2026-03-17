@@ -34,16 +34,30 @@ export const adminLogin = [
           return;
         }
 
-        // 创建管理员记录（关联第一个用户或创建系统管理员）
+        // 获取第一个用户作为管理员，如果没有用户则创建一个系统用户
+        let firstUser = await prisma.user.findFirst();
+        if (!firstUser) {
+          firstUser = await prisma.user.create({
+            data: {
+              username: 'admin',
+            },
+          });
+        }
+
+        // 创建管理员记录
         const newAdmin = await prisma.admin.create({
           data: {
-            userId: 'system',
+            userId: firstUser.id,
             role: 'SUPER',
-            permissions: ['ALL'],
+            permissions: JSON.stringify(['ALL']),
           },
         });
 
-        success(res, { message: '管理员初始化成功' });
+        success(res, { 
+          message: '管理员初始化成功',
+          adminId: newAdmin.id,
+          userId: firstUser.id,
+        });
         return;
       }
 

@@ -49,7 +49,7 @@ export const startGame = [
         // AI 生成题目
         const prompts = await getRandomPrompts(category, 3);
         question = await aiService.generateQuestion(category as any, prompts);
-        questionSource = QuestionSourceChoice.AI_GENERATED;
+        questionSource = 'AI_GENERATED';
         
         // 暂时创建题目记录（不入库，游戏结束后决定是否入库）
         question = await questionService.create({
@@ -58,11 +58,11 @@ export const startGame = [
           source: 'AI_GENERATED',
           aiGeneratedBy: req.userId,
         });
-        questionSource = QuestionSourceChoice.AI_GENERATED;
+        questionSource = 'AI_GENERATED';
       } else {
         // 从题库抽取
         question = await questionService.drawRandom(req.userId, category as any);
-        questionSource = QuestionSourceChoice.BANK;
+        questionSource = 'BANK';
       }
 
       if (!question) {
