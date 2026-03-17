@@ -4,6 +4,8 @@
     "ignore": [],
     "include": []
   },
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
   "setting": {
     "bundle": false,
     "userConfirmedBundleSwitch": false,

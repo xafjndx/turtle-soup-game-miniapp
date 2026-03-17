@@ -1,0 +1,22 @@
+{
+  "description": "海龟汤游戏小程序",
+  "setting": {
+    "compileHotReLoad": true
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "首页",
+          "pathName": "pages/index/index",
+          "query": ""
+        },
+        {
+          "name": "登录",
+          "pathName": "pages/login/login",
+          "query": ""
+        }
+      ]
+    }
+  }
+}
