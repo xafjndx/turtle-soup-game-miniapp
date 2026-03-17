@@ -70,4 +70,9 @@ router.post('/admin/crawler/trigger', authMiddleware, adminController.triggerCra
 // 操作日志
 router.get('/admin/logs', authMiddleware, adminController.getOperationLogs);
 
+// AI 模型配置
+router.get('/admin/ai-config', authMiddleware, adminController.getAIConfig);
+router.put('/admin/ai-config', authMiddleware, adminController.updateAIConfig);
+router.post('/admin/ai-config/test', authMiddleware, adminController.testAIConnection);
+
 export default router;

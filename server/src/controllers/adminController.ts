@@ -4,10 +4,169 @@ import prisma from '../utils/prisma';
 import { success, error, paginate, ErrorCode } from '../utils/response';
 import { authMiddleware } from '../middlewares/auth';
 import crawlerService from '../services/crawlerService';
+import config from '../config';
 
 // 类型定义
 type QuestionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SOFT_DELETED' | 'HARD_DELETED';
 type QuestionCategory = 'CLASSIC' | 'HORROR' | 'LOGIC' | 'WARM';
+
+// ==================== AI 模型配置管理 ====================
+
+// 获取 AI 配置
+export const getAIConfig = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // 从数据库获取配置，如果没有则返回默认配置
+    const dbConfig = await prisma.systemConfig.findUnique({
+      where: { key: 'ai_config' },
+    });
+
+    const defaultConfig = {
+      provider: 'alibaba',  // alibaba, openai, custom
+      model: config.ai.model,
+      apiKey: '',  // 不返回完整密钥
+      apiKeyMasked: config.ai.apiKey ? config.ai.apiKey.slice(0, 8) + '****' + config.ai.apiKey.slice(-4) : '',
+      baseUrl: config.ai.baseUrl,
+      enabled: !!config.ai.apiKey,
+    };
+
+    const aiConfig = dbConfig ? JSON.parse(dbConfig.value) : defaultConfig;
+
+    success(res, {
+      provider: aiConfig.provider || 'alibaba',
+      model: aiConfig.model || config.ai.model,
+      apiKeyMasked: aiConfig.apiKey ? aiConfig.apiKey.slice(0, 8) + '****' + aiConfig.apiKey.slice(-4) : '',
+      baseUrl: aiConfig.baseUrl || config.ai.baseUrl,
+      enabled: !!aiConfig.apiKey,
+      supportedProviders: [
+        { id: 'alibaba', name: '阿里百炼', models: ['qwen3.5-plus', 'qwen3.5-turbo', 'qwen-max'] },
+        { id: 'openai', name: 'OpenAI', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'] },
+        { id: 'deepseek', name: 'DeepSeek', models: ['deepseek-chat', 'deepseek-coder'] },
+        { id: 'custom', name: '自定义', models: [] },
+      ],
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 更新 AI 配置
+export const updateAIConfig = [
+  body('provider').isIn(['alibaba', 'openai', 'deepseek', 'custom']).withMessage('无效的AI提供商'),
+  body('model').isString().withMessage('请选择模型'),
+  body('apiKey').optional().isString(),
+  body('baseUrl').optional().isString(),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        error(res, ErrorCode.BAD_REQUEST, errors.array()[0].msg);
+        return;
+      }
+
+      const { provider, model, apiKey, baseUrl } = req.body;
+
+      // 获取现有配置
+      const existingConfig = await prisma.systemConfig.findUnique({
+        where: { key: 'ai_config' },
+      });
+
+      const oldConfig = existingConfig ? JSON.parse(existingConfig.value) : {};
+
+      // 更新配置（如果未提供新的apiKey，保留旧的）
+      const newConfig = {
+        provider,
+        model,
+        apiKey: apiKey || oldConfig.apiKey || config.ai.apiKey,
+        baseUrl: baseUrl || oldConfig.baseUrl || config.ai.baseUrl,
+        updatedAt: new Date().toISOString(),
+      };
+
+      // 保存到数据库
+      await prisma.systemConfig.upsert({
+        where: { key: 'ai_config' },
+        create: {
+          key: 'ai_config',
+          value: JSON.stringify(newConfig),
+        },
+        update: {
+          value: JSON.stringify(newConfig),
+        },
+      });
+
+      // 记录操作日志
+      await prisma.operationLog.create({
+        data: {
+          action: 'UPDATE_AI_CONFIG',
+          target: 'ai_config',
+          detail: { provider, model, updatedApiKey: !!apiKey },
+        },
+      });
+
+      success(res, {
+        message: 'AI配置已更新',
+        provider,
+        model,
+        apiKeyMasked: newConfig.apiKey ? newConfig.apiKey.slice(0, 8) + '****' + newConfig.apiKey.slice(-4) : '',
+      }, '配置保存成功，重启服务后生效');
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// 测试 AI 连接
+export const testAIConnection = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const dbConfig = await prisma.systemConfig.findUnique({
+      where: { key: 'ai_config' },
+    });
+
+    const aiConfig = dbConfig ? JSON.parse(dbConfig.value) : {
+      apiKey: config.ai.apiKey,
+      model: config.ai.model,
+      baseUrl: config.ai.baseUrl,
+    };
+
+    if (!aiConfig.apiKey) {
+      error(res, ErrorCode.BAD_REQUEST, '请先配置AI API密钥');
+      return;
+    }
+
+    // 发送测试请求
+    const axios = require('axios');
+    const testResponse = await axios.post(
+      aiConfig.baseUrl || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+      {
+        model: aiConfig.model || 'qwen3.5-plus',
+        input: {
+          messages: [{ role: 'user', content: '你好，请回复"测试成功"' }],
+        },
+        parameters: { result_format: 'message' },
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${aiConfig.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000,
+      }
+    );
+
+    success(res, {
+      success: true,
+      message: 'AI连接测试成功',
+      model: aiConfig.model,
+      response: testResponse.data.output?.choices?.[0]?.message?.content?.slice(0, 50) || '响应正常',
+    });
+  } catch (err: any) {
+    success(res, {
+      success: false,
+      message: `连接失败: ${err.message}`,
+      error: err.response?.data?.message || err.message,
+    });
+  }
+};
 
 // 管理员登录
 export const adminLogin = [

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import config from '../config';
 import logger from '../utils/logger';
+import prisma from '../utils/prisma';
 
 // 类型定义
 export type AnswerType = 'YES' | 'NO' | 'IRRELEVANT' | 'PARTIAL' | 'CORRECT';
@@ -22,25 +23,102 @@ export interface GeneratedQuestion {
   keywords: string[];
 }
 
+// AI 配置接口
+interface AIConfig {
+  provider: string;
+  model: string;
+  apiKey: string;
+  baseUrl: string;
+}
+
 // 阿里百炼 API 配置
 const DASHSCOPE_API = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 
 class AIService {
-  private apiKey: string;
-  private model: string;
+  private defaultApiKey: string;
+  private defaultModel: string;
+  private defaultBaseUrl: string;
+  private cachedConfig: AIConfig | null = null;
+  private configCacheTime: number = 0;
+  private readonly CACHE_TTL = 60000; // 缓存60秒
 
   constructor() {
-    this.apiKey = config.ai.apiKey;
-    this.model = config.ai.model;
+    this.defaultApiKey = config.ai.apiKey;
+    this.defaultModel = config.ai.model;
+    this.defaultBaseUrl = config.ai.baseUrl;
   }
 
-  // 调用阿里百炼 API
+  // 获取AI配置（优先从数据库读取）
+  private async getConfig(): Promise<AIConfig> {
+    // 检查缓存
+    if (this.cachedConfig && Date.now() - this.configCacheTime < this.CACHE_TTL) {
+      return this.cachedConfig;
+    }
+
+    try {
+      // 从数据库获取配置
+      const dbConfig = await prisma.systemConfig.findUnique({
+        where: { key: 'ai_config' },
+      });
+
+      if (dbConfig) {
+        const parsed = JSON.parse(dbConfig.value);
+        this.cachedConfig = {
+          provider: parsed.provider || 'alibaba',
+          model: parsed.model || this.defaultModel,
+          apiKey: parsed.apiKey || this.defaultApiKey,
+          baseUrl: parsed.baseUrl || this.defaultBaseUrl,
+        };
+        this.configCacheTime = Date.now();
+        return this.cachedConfig;
+      }
+    } catch (err) {
+      logger.warn('从数据库读取AI配置失败，使用默认配置');
+    }
+
+    // 使用默认配置（环境变量）
+    return {
+      provider: 'alibaba',
+      model: this.defaultModel,
+      apiKey: this.defaultApiKey,
+      baseUrl: this.defaultBaseUrl,
+    };
+  }
+
+  // 清除配置缓存
+  clearCache() {
+    this.cachedConfig = null;
+    this.configCacheTime = 0;
+  }
+
+  // 调用AI API
   private async callAPI(prompt: string, systemPrompt?: string): Promise<string> {
+    const aiConfig = await this.getConfig();
+
+    if (!aiConfig.apiKey) {
+      throw new Error('AI API密钥未配置，请在管理后台配置');
+    }
+
+    // 根据提供商选择不同的API调用方式
+    switch (aiConfig.provider) {
+      case 'alibaba':
+        return this.callAlibabaAPI(aiConfig, prompt, systemPrompt);
+      case 'openai':
+        return this.callOpenAIAPI(aiConfig, prompt, systemPrompt);
+      case 'deepseek':
+        return this.callDeepSeekAPI(aiConfig, prompt, systemPrompt);
+      default:
+        return this.callCustomAPI(aiConfig, prompt, systemPrompt);
+    }
+  }
+
+  // 阿里百炼 API
+  private async callAlibabaAPI(config: AIConfig, prompt: string, systemPrompt?: string): Promise<string> {
     try {
       const response = await axios.post(
-        DASHSCOPE_API,
+        config.baseUrl || DASHSCOPE_API,
         {
-          model: this.model,
+          model: config.model,
           input: {
             messages: [
               ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
@@ -53,7 +131,7 @@ class AIService {
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${config.apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -66,6 +144,87 @@ class AIService {
         response: error.response?.data,
       });
       throw new Error(`AI API 调用失败: ${error.message}`);
+    }
+  }
+
+  // OpenAI API
+  private async callOpenAIAPI(config: AIConfig, prompt: string, systemPrompt?: string): Promise<string> {
+    try {
+      const response = await axios.post(
+        `${config.baseUrl || 'https://api.openai.com/v1'}/chat/completions`,
+        {
+          model: config.model,
+          messages: [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            { role: 'user', content: prompt },
+          ],
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${config.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data.choices[0].message.content;
+    } catch (error: any) {
+      logger.error('OpenAI API call failed:', error.message);
+      throw new Error(`OpenAI API 调用失败: ${error.message}`);
+    }
+  }
+
+  // DeepSeek API
+  private async callDeepSeekAPI(config: AIConfig, prompt: string, systemPrompt?: string): Promise<string> {
+    try {
+      const response = await axios.post(
+        `${config.baseUrl || 'https://api.deepseek.com/v1'}/chat/completions`,
+        {
+          model: config.model,
+          messages: [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            { role: 'user', content: prompt },
+          ],
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${config.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data.choices[0].message.content;
+    } catch (error: any) {
+      logger.error('DeepSeek API call failed:', error.message);
+      throw new Error(`DeepSeek API 调用失败: ${error.message}`);
+    }
+  }
+
+  // 自定义 API
+  private async callCustomAPI(config: AIConfig, prompt: string, systemPrompt?: string): Promise<string> {
+    try {
+      const response = await axios.post(
+        `${config.baseUrl}/chat/completions`,
+        {
+          model: config.model,
+          messages: [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            { role: 'user', content: prompt },
+          ],
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${config.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return response.data.choices[0].message.content;
+    } catch (error: any) {
+      logger.error('Custom API call failed:', error.message);
+      throw new Error(`自定义 API 调用失败: ${error.message}`);
     }
   }
 

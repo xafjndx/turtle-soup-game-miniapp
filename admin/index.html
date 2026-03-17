@@ -44,6 +44,7 @@
           <a href="#" data-page="dashboard" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2 active">📊 数据概览</a>
           <a href="#" data-page="questions" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">📝 题目管理</a>
           <a href="#" data-page="review" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">✅ 审核中心</a>
+          <a href="#" data-page="ai-config" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">🤖 AI配置</a>
           <a href="#" data-page="logs" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">📋 操作日志</a>
         </nav>
         <div class="mt-8 pt-8 border-t border-indigo-700 text-xs text-indigo-300">
@@ -185,6 +186,80 @@
             </div>
             <div id="reviewList" class="divide-y divide-gray-200">
               <div class="p-8 text-center text-gray-500">加载中...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI配置页面 -->
+        <div id="ai-configPage" class="page hidden">
+          <h2 class="text-2xl font-bold mb-6">🤖 AI模型配置</h2>
+          
+          <div class="bg-white rounded-xl shadow p-6 mb-6">
+            <h3 class="text-lg font-bold mb-4">当前配置</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="text-sm text-gray-500">AI提供商</div>
+                <div class="text-lg font-bold" id="aiProvider">-</div>
+              </div>
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="text-sm text-gray-500">模型</div>
+                <div class="text-lg font-bold" id="aiModel">-</div>
+              </div>
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="text-sm text-gray-500">API密钥</div>
+                <div class="text-lg font-bold" id="aiApiKey">-</div>
+              </div>
+              <div class="p-4 bg-gray-50 rounded-lg">
+                <div class="text-sm text-gray-500">状态</div>
+                <div class="text-lg font-bold" id="aiStatus">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow p-6 mb-6">
+            <h3 class="text-lg font-bold mb-4">修改配置</h3>
+            <form id="aiConfigForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">AI提供商</label>
+                <select id="aiProviderSelect" class="w-full px-3 py-2 border rounded-lg">
+                  <option value="alibaba">阿里百炼（推荐）</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="custom">自定义</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">模型</label>
+                <select id="aiModelSelect" class="w-full px-3 py-2 border rounded-lg">
+                  <option value="qwen3.5-plus">qwen3.5-plus（推荐）</option>
+                  <option value="qwen3.5-turbo">qwen3.5-turbo（快速）</option>
+                  <option value="qwen-max">qwen-max（最强）</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">API密钥</label>
+                <input type="password" id="aiApiKeyInput" class="w-full px-3 py-2 border rounded-lg" placeholder="留空则保持原有密钥">
+                <p class="text-xs text-gray-500 mt-1">从AI提供商获取API密钥</p>
+              </div>
+              <div id="customUrlSection" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">自定义API地址</label>
+                <input type="text" id="aiCustomUrl" class="w-full px-3 py-2 border rounded-lg" placeholder="https://api.example.com/v1">
+              </div>
+              <div class="flex gap-4">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">保存配置</button>
+                <button type="button" id="testAIConnection" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">测试连接</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">⚠️</div>
+              <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                  <strong>注意：</strong>修改配置后需要重启服务才能生效。API密钥将安全存储在数据库中。
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -352,6 +427,7 @@
         if (page === 'dashboard') loadDashboard();
         if (page === 'questions') loadQuestions();
         if (page === 'review') loadReviewList();
+        if (page === 'ai-config') loadAIConfig();
         if (page === 'logs') loadLogs();
       };
     });
@@ -641,6 +717,115 @@
     };
     document.getElementById('nextPage').onclick = () => {
       loadQuestions(currentPage + 1);
+    };
+
+    // ==================== AI配置功能 ====================
+    
+    // 加载AI配置
+    async function loadAIConfig() {
+      try {
+        const config = await request('/admin/ai-config');
+        
+        const providerNames = {
+          'alibaba': '阿里百炼',
+          'openai': 'OpenAI',
+          'deepseek': 'DeepSeek',
+          'custom': '自定义'
+        };
+        
+        document.getElementById('aiProvider').textContent = providerNames[config.provider] || config.provider;
+        document.getElementById('aiModel').textContent = config.model || '-';
+        document.getElementById('aiApiKey').textContent = config.apiKeyMasked || '未配置';
+        document.getElementById('aiStatus').innerHTML = config.enabled 
+          ? '<span class="text-green-600">✓ 已配置</span>' 
+          : '<span class="text-red-600">✗ 未配置</span>';
+        
+        // 更新表单
+        document.getElementById('aiProviderSelect').value = config.provider || 'alibaba';
+        updateModelOptions(config.provider || 'alibaba');
+        document.getElementById('aiModelSelect').value = config.model || 'qwen3.5-plus';
+        
+      } catch (err) {
+        console.error('加载AI配置失败:', err);
+      }
+    }
+
+    // 更新模型选项
+    function updateModelOptions(provider) {
+      const models = {
+        'alibaba': ['qwen3.5-plus', 'qwen3.5-turbo', 'qwen-max'],
+        'openai': ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+        'deepseek': ['deepseek-chat', 'deepseek-coder'],
+        'custom': []
+      };
+      
+      const select = document.getElementById('aiModelSelect');
+      const modelList = models[provider] || [];
+      
+      select.innerHTML = modelList.map(m => 
+        `<option value="${m}">${m}</option>`
+      ).join('') || '<option value="">请输入自定义模型名</option>';
+      
+      // 显示/隐藏自定义URL
+      document.getElementById('customUrlSection').classList.toggle('hidden', provider !== 'custom');
+    }
+
+    // 提供商变更
+    document.getElementById('aiProviderSelect').onchange = (e) => {
+      updateModelOptions(e.target.value);
+    };
+
+    // 保存AI配置
+    document.getElementById('aiConfigForm').onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const provider = document.getElementById('aiProviderSelect').value;
+      const model = document.getElementById('aiModelSelect').value;
+      const apiKey = document.getElementById('aiApiKeyInput').value;
+      const customUrl = document.getElementById('aiCustomUrl').value;
+      
+      try {
+        await request('/admin/ai-config', {
+          method: 'PUT',
+          body: JSON.stringify({
+            provider,
+            model,
+            apiKey: apiKey || undefined,
+            baseUrl: provider === 'custom' ? customUrl : undefined,
+          }),
+        });
+        
+        alert('配置已保存！重启服务后生效。');
+        loadAIConfig();
+        
+        // 清空密钥输入框
+        document.getElementById('aiApiKeyInput').value = '';
+        
+      } catch (err) {
+        alert('保存失败: ' + err.message);
+      }
+    };
+
+    // 测试AI连接
+    document.getElementById('testAIConnection').onclick = async () => {
+      const btn = document.getElementById('testAIConnection');
+      btn.textContent = '测试中...';
+      btn.disabled = true;
+      
+      try {
+        const result = await request('/admin/ai-config/test', { method: 'POST' });
+        
+        if (result.success) {
+          alert('✓ 连接成功！\n\n模型: ' + result.model + '\n响应: ' + result.response);
+        } else {
+          alert('✗ 连接失败: ' + result.message);
+        }
+      } catch (err) {
+        alert('测试失败: ' + err.message);
+      } finally {
+        btn.textContent = '测试连接';
+        btn.disabled = false;
+      }
     };
 
     // 初始化
