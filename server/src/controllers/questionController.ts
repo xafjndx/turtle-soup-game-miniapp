@@ -126,7 +126,8 @@ export const getList = [
   },
 ];
 
-// 创建题目（管理员）
+// 创建题目（管理员手动添加）
+// 管理员手动添加的题目默认状态为 APPROVED，可直接上架
 export const create = [
   authMiddleware,
   body('surface').notEmpty().withMessage('汤面不能为空'),
@@ -144,6 +145,7 @@ export const create = [
 
       const { title, surface, bottom, category, hints, keywords } = req.body;
 
+      // 创建题目，管理员手动添加的默认状态为 APPROVED
       const question = await questionService.create({
         title,
         surface,
@@ -151,11 +153,17 @@ export const create = [
         category: category as QuestionCategory,
         hints,
         keywords,
-        source: 'PLATFORM',
+        source: 'PLATFORM', // 来源：平台预设/人工添加
       });
 
-      success(res, question, '题目创建成功');
+      // 管理员手动添加的题目默认上架
+      await questionService.update(question.id, { status: 'APPROVED' });
+
+      logger.info(`管理员手动添加题目: id=${question.id}, title=${title || '无标题'}`);
+
+      success(res, question, '题目添加成功，已自动上架');
     } catch (err) {
+      logger.error('创建题目失败:', err);
       next(err);
     }
   },

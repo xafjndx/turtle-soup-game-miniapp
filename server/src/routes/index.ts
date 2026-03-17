@@ -52,13 +52,15 @@ router.get('/admin/statistics', authMiddleware, adminController.getStatistics);
 
 // 题目管理
 router.get('/admin/questions', authMiddleware, adminController.getQuestions);
+router.post('/admin/question/create', authMiddleware, questionController.create);  // 新增：手动创建题目
+router.put('/admin/question/:id', authMiddleware, questionController.update);  // 更新题目
 router.put('/admin/question/:id/status', authMiddleware, adminController.updateQuestionStatus);
 router.put('/admin/question/:id/category', authMiddleware, adminController.updateQuestionCategory);
 router.put('/admin/question/:id/quality', authMiddleware, adminController.updateQuestionQuality);
 router.post('/admin/questions/delete', authMiddleware, adminController.batchDeleteQuestions);
 router.post('/admin/questions/restore', authMiddleware, adminController.restoreQuestions);
 
-// 爬虫管理
+// 爬虫管理（已禁用）
 router.post('/admin/crawler/trigger', authMiddleware, adminController.triggerCrawler);
 
 // 操作日志

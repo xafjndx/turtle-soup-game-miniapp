@@ -96,6 +96,9 @@
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">题目管理</h2>
             <div class="flex gap-4">
+              <button id="addQuestionBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                ➕ 添加题目
+              </button>
               <select id="filterCategory" class="px-4 py-2 border rounded-lg">
                 <option value="">全部分类</option>
                 <option value="CLASSIC">经典推理</option>
@@ -216,6 +219,57 @@
         <button id="modalCancel" class="px-4 py-2 border rounded-lg hover:bg-gray-50">取消</button>
         <button id="modalConfirm" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">确认</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 添加题目模态框 -->
+  <div id="addQuestionModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <h3 class="text-lg font-bold mb-4">➕ 添加新题目</h3>
+      <form id="addQuestionForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">题目标题（可选）</label>
+          <input type="text" id="newTitle" class="w-full px-3 py-2 border rounded-lg" placeholder="给题目起个名字">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">汤面 <span class="text-red-500">*</span></label>
+          <textarea id="newSurface" rows="3" class="w-full px-3 py-2 border rounded-lg" placeholder="谜题情境（给玩家看的题目）" required></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">汤底 <span class="text-red-500">*</span></label>
+          <textarea id="newBottom" rows="4" class="w-full px-3 py-2 border rounded-lg" placeholder="真实答案（玩家需要推理出的真相）" required></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">分类 <span class="text-red-500">*</span></label>
+            <select id="newCategory" class="w-full px-3 py-2 border rounded-lg" required>
+              <option value="CLASSIC">经典推理</option>
+              <option value="HORROR">恐怖悬疑</option>
+              <option value="LOGIC">逻辑陷阱</option>
+              <option value="WARM">温情反转</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+            <select id="newStatus" class="w-full px-3 py-2 border rounded-lg">
+              <option value="APPROVED">直接上架</option>
+              <option value="PENDING">待审核</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">提示（每行一个）</label>
+          <textarea id="newHints" rows="3" class="w-full px-3 py-2 border rounded-lg" placeholder="提示1&#10;提示2&#10;提示3"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">关键词（每行一个）</label>
+          <textarea id="newKeywords" rows="2" class="w-full px-3 py-2 border rounded-lg" placeholder="关键词1&#10;关键词2"></textarea>
+        </div>
+        <div class="mt-6 flex justify-end gap-2">
+          <button type="button" id="addQuestionCancel" class="px-4 py-2 border rounded-lg hover:bg-gray-50">取消</button>
+          <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">添加题目</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -500,6 +554,78 @@
     // 查看题目详情
     window.viewQuestion = (id) => {
       alert('题目ID: ' + id + '\n\n详情功能开发中...');
+    };
+
+    // ==================== 添加题目功能 ====================
+    
+    // 打开添加题目模态框
+    document.getElementById('addQuestionBtn').onclick = () => {
+      document.getElementById('addQuestionModal').classList.add('active');
+      // 清空表单
+      document.getElementById('addQuestionForm').reset();
+    };
+
+    // 关闭添加题目模态框
+    document.getElementById('addQuestionCancel').onclick = () => {
+      document.getElementById('addQuestionModal').classList.remove('active');
+    };
+
+    // 提交添加题目表单
+    document.getElementById('addQuestionForm').onsubmit = async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('newTitle').value.trim();
+      const surface = document.getElementById('newSurface').value.trim();
+      const bottom = document.getElementById('newBottom').value.trim();
+      const category = document.getElementById('newCategory').value;
+      const status = document.getElementById('newStatus').value;
+      const hintsText = document.getElementById('newHints').value.trim();
+      const keywordsText = document.getElementById('newKeywords').value.trim();
+
+      // 验证必填字段
+      if (!surface || !bottom) {
+        alert('请填写汤面和汤底！');
+        return;
+      }
+
+      // 解析提示和关键词
+      const hints = hintsText ? hintsText.split('\n').filter(h => h.trim()) : ['暂无提示'];
+      const keywords = keywordsText ? keywordsText.split('\n').filter(k => k.trim()) : [];
+
+      try {
+        const question = await request('/admin/question/create', {
+          method: 'POST',
+          body: JSON.stringify({
+            title,
+            surface,
+            bottom,
+            category,
+            hints,
+            keywords,
+          }),
+        });
+
+        // 如果选择了"直接上架"，更新状态
+        if (status === 'APPROVED') {
+          await request('/admin/question/' + question.id + '/status', {
+            method: 'PUT',
+            body: JSON.stringify({ status: 'APPROVED' }),
+          });
+        }
+
+        alert('题目添加成功！');
+        document.getElementById('addQuestionModal').classList.remove('active');
+        loadQuestions(1); // 刷新列表
+      } catch (err) {
+        alert('添加失败: ' + err.message);
+      }
+    };
+
+    // 点击模态框外部关闭
+    document.getElementById('addQuestionModal').onclick = (e) => {
+      if (e.target.id === 'addQuestionModal') {
+        document.getElementById('addQuestionModal').classList.remove('active');
+      }
     };
 
     // 搜索和筛选
