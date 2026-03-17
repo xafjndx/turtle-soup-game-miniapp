@@ -1,0 +1,86 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 顶部区域 -->
+  <view class="header">
+    <view class="welcome">
+      <text class="greeting">Hi, {{userInfo.nickname || userInfo.username || '玩家'}}</text>
+      <text class="subtitle">准备好来一碗海龟汤了吗？</text>
+    </view>
+    <view class="stats" bindtap="onViewProfile">
+      <view class="stat-item">
+        <text class="value">{{userInfo.totalGames || 0}}</text>
+        <text class="label">游戏</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{userInfo.hitRate || 0}}%</text>
+        <text class="label">命中率</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类选择 -->
+  <view class="category-section">
+    <view class="section-title">选择分类</view>
+    <view class="category-grid">
+      <view 
+        class="category-item {{selectedCategory === item.key ? 'active' : ''}}"
+        wx:for="{{categories}}" 
+        wx:key="key"
+        data-category="{{item.key}}"
+        bindtap="onSelectCategory"
+      >
+        <text class="icon">{{item.icon}}</text>
+        <text class="name">{{item.name}}</text>
+        <text class="desc">{{item.desc}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 来源选择 -->
+  <view class="source-section">
+    <view class="section-title">题目来源</view>
+    <view class="source-options">
+      <view 
+        class="source-item {{selectedSource === 'BANK' ? 'active' : ''}}"
+        data-source="BANK"
+        bindtap="onSelectSource"
+      >
+        <text class="icon">📚</text>
+        <text class="label">题库抽取</text>
+      </view>
+      <view 
+        class="source-item {{selectedSource === 'AI_GENERATED' ? 'active' : ''}}"
+        data-source="AI_GENERATED"
+        bindtap="onSelectSource"
+      >
+        <text class="icon">🤖</text>
+        <text class="label">AI 生成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 开始按钮 -->
+  <view class="action-section">
+    <button class="btn-start" bindtap="onStartGame" loading="{{loading}}">
+      🎮 开始游戏
+    </button>
+  </view>
+
+  <!-- 排行榜 TOP3 -->
+  <view class="leaderboard-section" wx:if="{{top3.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">🏆 排行榜 TOP3</text>
+      <text class="more" bindtap="onViewLeaderboard">查看全部 ></text>
+    </view>
+    <view class="top3-list">
+      <view class="top3-item" wx:for="{{top3}}" wx:key="id">
+        <view class="rank rank-{{index + 1}}">{{index + 1}}</view>
+        <view class="info">
+          <text class="name">{{item.nickname || item.username}}</text>
+          <text class="hit-rate">命中率 {{item.hitRate}}%</text>
+        </view>
+        <view class="games">{{item.totalGames}}局</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,134 @@
+/* pages/leaderboard/leaderboard.wxss */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 30rpx;
+}
+
+.my-rank {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 30rpx 40rpx;
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.my-rank .label {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.my-rank .value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.leaderboard {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.rank-item:last-child {
+  border-bottom: none;
+}
+
+.rank-item.me {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+}
+
+.rank {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 8rpx;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #999;
+}
+
+.rank.top-1 {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #fff;
+}
+
+.rank.top-2 {
+  background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+  color: #fff;
+}
+
+.rank.top-3 {
+  background: linear-gradient(135deg, #cd7f32, #b87333);
+  color: #fff;
+}
+
+.info {
+  flex: 1;
+}
+
+.name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.stats {
+  font-size: 22rpx;
+  color: #999;
+  display: flex;
+  gap: 8rpx;
+}
+
+.hit-rate {
+  text-align: right;
+}
+
+.hit-rate .value {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.hit-rate .unit {
+  font-size: 22rpx;
+  color: #667eea;
+}
+
+.empty, .loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.empty .icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty .text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.loading text {
+  font-size: 28rpx;
+  color: #999;
+}

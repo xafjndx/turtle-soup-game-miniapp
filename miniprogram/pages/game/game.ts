@@ -1,0 +1,301 @@
+// pages/game/game.ts
+import { 
+  getCurrentSession, 
+  submitRound, 
+  useHint, 
+  endGame,
+  saveAIQuestion 
+} from '../../api/index';
+
+Page({
+  data: {
+    session: null as any,
+    question: null as any,
+    hasPlayed: false,
+    
+    // 游戏状态
+    inputMode: 'TEXT' as 'VOICE' | 'TEXT',
+    showInputSelector: false,
+    playerInput: '',
+    hintRemaining: 3,
+    currentHint: '',
+    rounds: [] as any[],
+    
+    // 结束弹窗
+    showEndModal: false,
+    showResultModal: false,
+    gameResult: null as any,
+    revealedAnswer: false,
+    showSaveQuestion: false,
+    
+    // 录音
+    isRecording: false,
+    recorderManager: null as any,
+  },
+
+  onLoad(options) {
+    const { sessionId, hasPlayed } = options;
+    this.setData({ hasPlayed: hasPlayed === 'true' });
+    
+    // 加载会话信息
+    this.loadSession();
+    
+    // 初始化录音管理器
+    this.setData({
+      recorderManager: wx.getRecorderManager(),
+    });
+    
+    // 录音结束回调
+    this.data.recorderManager.onStop((res: any) => {
+      this.handleRecordingEnd(res);
+    });
+  },
+
+  async loadSession() {
+    try {
+      const session = await getCurrentSession();
+      if (session) {
+        const question = wx.getStorageSync('currentQuestion');
+        this.setData({
+          session,
+          question,
+          hintRemaining: session.hintRemaining,
+          rounds: session.rounds || [],
+        });
+      }
+    } catch (err) {
+      console.error('加载会话失败:', err);
+    }
+  },
+
+  // 选择输入方式
+  onSelectInputMode(e: any) {
+    const { mode } = e.currentTarget.dataset;
+    this.setData({ 
+      inputMode: mode,
+      showInputSelector: false 
+    });
+  },
+
+  // 显示输入方式选择
+  showInputModeSelector() {
+    this.setData({ showInputSelector: true });
+  },
+
+  // 隐藏输入方式选择
+  hideInputModeSelector() {
+    this.setData({ showInputSelector: false });
+  },
+
+  // 输入文字
+  onInputChange(e: any) {
+    this.setData({ playerInput: e.detail.value });
+  },
+
+  // 开始录音
+  startRecording() {
+    this.setData({ isRecording: true });
+    this.data.recorderManager.start({
+      duration: 60000,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      format: 'mp3',
+    });
+  },
+
+  // 停止录音
+  stopRecording() {
+    this.setData({ isRecording: false });
+    this.data.recorderManager.stop();
+  },
+
+  // 录音结束处理
+  async handleRecordingEnd(res: any) {
+    // TODO: 调用语音识别 API
+    wx.showToast({ title: '语音识别中...', icon: 'loading' });
+    
+    // 模拟语音识别结果
+    setTimeout(() => {
+      wx.hideToast();
+      this.setData({ playerInput: '这是语音识别的结果（模拟）' });
+    }, 1000);
+  },
+
+  // 提交提问
+  async onSubmitAsk() {
+    const { playerInput, session } = this.data;
+    
+    if (!playerInput.trim()) {
+      wx.showToast({ title: '请输入内容', icon: 'none' });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '思考中...' });
+      
+      const result = await submitRound(
+        session.id,
+        this.data.inputMode,
+        playerInput,
+        'ASK'
+      );
+      
+      wx.hideLoading();
+      
+      this.setData({
+        rounds: [...this.data.rounds, result.round],
+        playerInput: '',
+      });
+
+      // 判断是否命中
+      if (result.sessionEnded) {
+        this.handleGameWin(result.judgment.hitRate);
+      }
+    } catch (err: any) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '提交失败', icon: 'none' });
+    }
+  },
+
+  // 提交猜测
+  async onSubmitGuess() {
+    const { playerInput, session } = this.data;
+    
+    if (!playerInput.trim()) {
+      wx.showToast({ title: '请输入你的猜测', icon: 'none' });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: '判定中...' });
+      
+      const result = await submitRound(
+        session.id,
+        this.data.inputMode,
+        playerInput,
+        'GUESS'
+      );
+      
+      wx.hideLoading();
+      
+      this.setData({
+        rounds: [...this.data.rounds, result.round],
+        playerInput: '',
+      });
+
+      if (result.sessionEnded) {
+        this.handleGameWin(result.judgment.hitRate);
+      } else {
+        wx.showToast({ 
+          title: `重合率 ${result.judgment.hitRate}%`, 
+          icon: 'none' 
+        });
+      }
+    } catch (err: any) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '提交失败', icon: 'none' });
+    }
+  },
+
+  // 使用提示
+  async onUseHint() {
+    const { session, hintRemaining } = this.data;
+    
+    if (hintRemaining <= 0) {
+      wx.showToast({ title: '提示次数已用完', icon: 'none' });
+      return;
+    }
+
+    try {
+      const result = await useHint(session.id);
+      this.setData({
+        currentHint: result.hint,
+        hintRemaining: result.hintRemaining,
+      });
+    } catch (err: any) {
+      wx.showToast({ title: err.message || '获取提示失败', icon: 'none' });
+    }
+  },
+
+  // 关闭提示
+  onCloseHint() {
+    this.setData({ currentHint: '' });
+  },
+
+  // 点击结束
+  onEndGame() {
+    this.setData({ showEndModal: true });
+  },
+
+  // 查看汤底
+  async onViewAnswer() {
+    this.setData({ showEndModal: false, revealedAnswer: true });
+    await this.finishGame('QUIT', true);
+  },
+
+  // 保留神秘感
+  async onKeepMystery() {
+    this.setData({ showEndModal: false, revealedAnswer: false });
+    await this.finishGame('QUIT', false);
+  },
+
+  // 游戏胜利
+  async handleGameWin(hitRate: number) {
+    this.setData({ 
+      gameResult: { hitRate, result: 'WIN' },
+      showResultModal: true,
+    });
+    await this.finishGame('WIN', true);
+  },
+
+  // 结束游戏
+  async finishGame(result: 'WIN' | 'QUIT', revealedAnswer: boolean) {
+    try {
+      const { session } = this.data;
+      const res = await endGame(session.id, result, revealedAnswer);
+      
+      // 判断是否是 AI 生成的题目
+      if (session.questionSource === 'AI_GENERATED') {
+        this.setData({ showSaveQuestion: true });
+      }
+      
+      // 更新游戏结果
+      this.setData({
+        gameResult: {
+          ...this.data.gameResult,
+          result,
+          answer: res.question?.bottom,
+        },
+      });
+    } catch (err: any) {
+      wx.showToast({ title: err.message || '结束游戏失败', icon: 'none' });
+    }
+  },
+
+  // 保存 AI 题目到题库
+  async onSaveQuestion() {
+    try {
+      const { session } = this.data;
+      await saveAIQuestion(session.id);
+      wx.showToast({ title: '已加入题库', icon: 'success' });
+      this.setData({ showSaveQuestion: false });
+    } catch (err: any) {
+      wx.showToast({ title: err.message || '保存失败', icon: 'none' });
+    }
+  },
+
+  // 不保存题目
+  onSkipSave() {
+    this.setData({ showSaveQuestion: false });
+  },
+
+  // 再来一局
+  onPlayAgain() {
+    wx.redirectTo({ url: '/pages/index/index' });
+  },
+
+  // 返回首页
+  onBackHome() {
+    wx.switchTab({ url: '/pages/index/index' });
+  },
+});

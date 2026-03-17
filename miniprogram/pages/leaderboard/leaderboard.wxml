@@ -1,0 +1,44 @@
+<!--pages/leaderboard/leaderboard.wxml-->
+<view class="container">
+  <!-- 我的排名 -->
+  <view class="my-rank" wx:if="{{myRank}}">
+    <text class="label">我的排名</text>
+    <text class="value">#{{myRank}}</text>
+  </view>
+
+  <!-- 排行榜列表 -->
+  <view class="leaderboard">
+    <view 
+      class="rank-item {{index < 3 ? 'top' : ''}} {{item.isMe ? 'me' : ''}}"
+      wx:for="{{leaderboard}}" 
+      wx:key="id"
+    >
+      <view class="rank {{index < 3 ? 'top-' + (index + 1) : ''}}">
+        {{index + 1}}
+      </view>
+      <view class="info">
+        <text class="name">{{item.nickname || item.username}}</text>
+        <view class="stats">
+          <text>{{item.totalGames}}局</text>
+          <text>·</text>
+          <text>{{item.winCount}}胜</text>
+        </view>
+      </view>
+      <view class="hit-rate">
+        <text class="value">{{item.hitRate}}</text>
+        <text class="unit">%</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && leaderboard.length === 0}}">
+    <text class="icon">🏆</text>
+    <text class="text">暂无排行数据</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+</view>

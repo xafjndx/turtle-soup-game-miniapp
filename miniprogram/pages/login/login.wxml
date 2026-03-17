@@ -1,0 +1,74 @@
+<!--pages/login/login.wxml-->
+<view class="container">
+  <!-- Logo 区域 -->
+  <view class="logo-area">
+    <view class="logo">🐢</view>
+    <text class="title">海龟汤</text>
+    <text class="subtitle">推理游戏</text>
+  </view>
+
+  <!-- 排行榜 TOP3 -->
+  <view class="top3-section" wx:if="{{top3.length > 0}}">
+    <view class="section-title">🏆 命中率排行榜</view>
+    <view class="top3-list">
+      <view class="top3-item" wx:for="{{top3}}" wx:key="id">
+        <view class="rank">{{index + 1}}</view>
+        <view class="info">
+          <text class="name">{{item.nickname || item.username}}</text>
+          <text class="hit-rate">命中率 {{item.hitRate}}%</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 登录区域 -->
+  <view class="login-area">
+    <!-- 新用户注册 -->
+    <view class="register-section" wx:if="{{isNewUser}}">
+      <input 
+        class="username-input"
+        type="text"
+        placeholder="请输入用户名"
+        maxlength="20"
+        value="{{username}}"
+        bindinput="onInputUsername"
+      />
+      <button class="btn-primary" bindtap="onUsernameLogin" loading="{{loading}}">
+        开始游戏
+      </button>
+      <view class="switch-text" bindtap="toggleMode" wx:if="{{existingUsers.length > 0}}">
+        已有账号？点击登录
+      </view>
+    </view>
+
+    <!-- 已有账号选择 -->
+    <view class="existing-section" wx:else>
+      <view class="section-title">选择账号登录</view>
+      <view class="user-list">
+        <view 
+          class="user-item" 
+          wx:for="{{existingUsers}}" 
+          wx:key="id"
+          data-username="{{item.username}}"
+          bindtap="onSelectUser"
+        >
+          <image class="avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
+          <text class="username">{{item.nickname || item.username}}</text>
+        </view>
+      </view>
+      <view class="switch-text" bindtap="toggleMode">
+        创建新账号
+      </view>
+    </view>
+
+    <!-- 微信登录 -->
+    <view class="wechat-login">
+      <view class="divider">
+        <text>或</text>
+      </view>
+      <button class="btn-wechat" bindtap="onWechatLogin" loading="{{loading}}">
+        <text class="icon">📱</text> 微信一键登录
+      </button>
+    </view>
+  </view>
+</view>

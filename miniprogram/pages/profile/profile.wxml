@@ -1,0 +1,85 @@
+<!--pages/profile/profile.wxml-->
+<view class="container">
+  <!-- 用户信息 -->
+  <view class="user-section">
+    <view class="avatar">
+      <image src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
+    </view>
+    <view class="info">
+      <text class="name">{{userInfo.nickname || userInfo.username}}</text>
+      <view class="rank" bindtap="onViewLeaderboard">
+        <text>排名 #{{userInfo.rank || '--'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 统计数据 -->
+  <view class="stats-section">
+    <view class="stat-card">
+      <view class="value">{{userInfo.totalGames || 0}}</view>
+      <view class="label">游戏局数</view>
+    </view>
+    <view class="stat-card">
+      <view class="value">{{userInfo.winCount || 0}}</view>
+      <view class="label">猜中次数</view>
+    </view>
+    <view class="stat-card highlight">
+      <view class="value">{{userInfo.hitRate || 0}}%</view>
+      <view class="label">命中率</view>
+    </view>
+    <view class="stat-card">
+      <view class="value">{{userInfo.avgPlayTime || 0}}</view>
+      <view class="label">平均用时(分)</view>
+    </view>
+  </view>
+
+  <!-- 详细统计 -->
+  <view class="detail-section">
+    <view class="section-title">详细数据</view>
+    <view class="detail-list">
+      <view class="detail-item">
+        <text class="label">总游戏时间</text>
+        <text class="value">{{userInfo.totalPlayTime || 0}} 分钟</text>
+      </view>
+      <view class="detail-item">
+        <text class="label">单局最长时间</text>
+        <text class="value">{{userInfo.maxPlayTime || 0}} 分钟</text>
+      </view>
+      <view class="detail-item">
+        <text class="label">平均提示使用</text>
+        <text class="value">{{userInfo.avgHintsPerGame || 0}} 次</text>
+      </view>
+      <view class="detail-item">
+        <text class="label">总提示使用</text>
+        <text class="value">{{userInfo.totalHintsUsed || 0}} 次</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最近游戏 -->
+  <view class="history-section" wx:if="{{history.length > 0}}">
+    <view class="section-title">最近游戏</view>
+    <view class="history-list">
+      <view class="history-item" wx:for="{{history}}" wx:key="id">
+        <view class="result {{item.result === 'WIN' ? 'win' : 'lose'}}">
+          {{item.result === 'WIN' ? '胜' : '负'}}
+        </view>
+        <view class="info">
+          <view class="surface">{{item.question.surface}}</view>
+          <view class="meta">
+            <text>{{item.playTime}}分钟</text>
+            <text>·</text>
+            <text>{{item.hintUsed}}提示</text>
+            <text>·</text>
+            <text>{{item.hitRate}}%命中</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-section">
+    <button class="btn-logout" bindtap="onLogout">退出登录</button>
+  </view>
+</view>

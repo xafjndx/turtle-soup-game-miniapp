@@ -1,0 +1,138 @@
+<!--pages/game/game.wxml-->
+<view class="container">
+  <!-- 汤面展示 -->
+  <view class="surface-section">
+    <view class="surface-header">
+      <text class="label">【汤面】</text>
+      <view class="hint-badge" wx:if="{{hasPlayed}}">
+        <text>已玩过</text>
+      </view>
+    </view>
+    <view class="surface-content">
+      {{question.surface}}
+    </view>
+    <view class="hint-info">
+      <text>💡 剩余提示：{{hintRemaining}}/3</text>
+    </view>
+  </view>
+
+  <!-- 回合历史 -->
+  <view class="rounds-section" wx:if="{{rounds.length > 0}}">
+    <view class="section-title">对话记录</view>
+    <scroll-view scroll-y class="rounds-list">
+      <view class="round-item" wx:for="{{rounds}}" wx:key="id">
+        <view class="player-input">
+          <text class="tag">问</text>
+          <text class="text">{{item.playerInput}}</text>
+        </view>
+        <view class="ai-response">
+          <text class="tag {{item.answerType}}">{{item.answerType === 'YES' ? '是' : item.answerType === 'NO' ? '否' : item.answerType === 'IRRELEVANT' ? '无关' : '部分正确'}}</text>
+          <text class="text">{{item.aiResponse}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 输入区域 -->
+  <view class="input-section">
+    <!-- 输入方式选择 -->
+    <view class="input-mode">
+      <view class="mode-btn {{inputMode === 'TEXT' ? 'active' : ''}}" data-mode="TEXT" bindtap="onSelectInputMode">
+        <text class="icon">⌨️</text>
+        <text>文字</text>
+      </view>
+      <view class="mode-btn {{inputMode === 'VOICE' ? 'active' : ''}}" data-mode="VOICE" bindtap="onSelectInputMode">
+        <text class="icon">🎤</text>
+        <text>语音</text>
+      </view>
+    </view>
+
+    <!-- 文字输入 -->
+    <view class="text-input" wx:if="{{inputMode === 'TEXT'}}">
+      <textarea 
+        class="input-area"
+        placeholder="输入你的问题或猜测..."
+        maxlength="200"
+        value="{{playerInput}}"
+        bindinput="onInputChange"
+      />
+    </view>
+
+    <!-- 语音输入 -->
+    <view class="voice-input" wx:else>
+      <view 
+        class="record-btn {{isRecording ? 'recording' : ''}}"
+        bindtouchstart="startRecording"
+        bindtouchend="stopRecording"
+      >
+        <text class="icon">🎤</text>
+        <text class="tip">{{isRecording ? '松开结束' : '按住说话'}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-btns">
+      <button class="btn-hint" bindtap="onUseHint" disabled="{{hintRemaining <= 0}}">
+        💡 提示 ({{hintRemaining}})
+      </button>
+      <button class="btn-ask" bindtap="onSubmitAsk">提问</button>
+      <button class="btn-guess" bindtap="onSubmitGuess">猜答案</button>
+      <button class="btn-end" bindtap="onEndGame">结束</button>
+    </view>
+  </view>
+
+  <!-- 提示弹窗 -->
+  <view class="hint-modal" wx:if="{{currentHint}}" bindtap="onCloseHint">
+    <view class="hint-content" catchtap="stopPropagation">
+      <view class="hint-title">💡 提示</view>
+      <view class="hint-text">{{currentHint}}</view>
+      <button class="btn-close" bindtap="onCloseHint">知道了</button>
+    </view>
+  </view>
+
+  <!-- 结束选项弹窗 -->
+  <view class="end-modal" wx:if="{{showEndModal}}">
+    <view class="modal-mask" bindtap="hideEndModal"></view>
+    <view class="modal-content">
+      <view class="modal-title">确定要结束游戏吗？</view>
+      <view class="modal-btns">
+        <button class="btn-view" bindtap="onViewAnswer">查看汤底</button>
+        <button class="btn-mystery" bindtap="onKeepMystery">保留神秘感</button>
+        <button class="btn-cancel" bindtap="hideEndModal">继续游戏</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 结果弹窗 -->
+  <view class="result-modal" wx:if="{{showResultModal}}">
+    <view class="modal-mask"></view>
+    <view class="modal-content">
+      <view class="result-icon">{{gameResult.result === 'WIN' ? '🎉' : '😮'}}</view>
+      <view class="result-title">{{gameResult.result === 'WIN' ? '恭喜猜中！' : '游戏结束'}}</view>
+      <view class="result-hit-rate" wx:if="{{gameResult.hitRate}}">
+        重合率：{{gameResult.hitRate}}%
+      </view>
+      <view class="result-answer" wx:if="{{revealedAnswer && gameResult.answer}}">
+        <view class="label">【汤底】</view>
+        <view class="text">{{gameResult.answer}}</view>
+      </view>
+      <view class="modal-btns">
+        <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
+        <button class="btn-home" bindtap="onBackHome">返回首页</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- AI 题目入库弹窗 -->
+  <view class="save-modal" wx:if="{{showSaveQuestion}}">
+    <view class="modal-mask"></view>
+    <view class="modal-content">
+      <view class="modal-title">是否将此题目加入题库？</view>
+      <view class="modal-desc">您的贡献将帮助更多玩家体验这道题目</view>
+      <view class="modal-btns">
+        <button class="btn-save" bindtap="onSaveQuestion">加入题库</button>
+        <button class="btn-skip" bindtap="onSkipSave">不了</button>
+      </view>
+    </view>
+  </view>
+</view>
