@@ -374,18 +374,21 @@ export const restoreQuestions = [
   },
 ];
 
-// 手动触发爬虫
+// 手动触发爬虫（已禁用）
 export const triggerCrawler = [
   authMiddleware,
 
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // 异步执行爬虫
-      crawlerService.runCrawler().catch(err => {
-        console.error('爬虫执行失败:', err);
+      const result = await crawlerService.runCrawler();
+      
+      // 记录操作日志
+      await logOperation(req.userId!, 'TRIGGER_CRAWLER', undefined, { 
+        result,
+        note: '爬虫功能已禁用' 
       });
 
-      success(res, { message: '爬虫任务已启动' });
+      success(res, result, '爬虫功能已禁用，请使用其他方式添加题目');
     } catch (err) {
       next(err);
     }

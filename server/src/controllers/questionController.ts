@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { body, query, param, validationResult } from 'express-validator';
 import questionService from '../services/questionService';
+import aiService from '../services/aiService';
 import { success, error, paginate, ErrorCode } from '../utils/response';
 import { authMiddleware } from '../middlewares/auth';
+import logger from '../utils/logger';
 
 // 类型定义
 type QuestionCategory = 'CLASSIC' | 'HORROR' | 'LOGIC' | 'WARM';
@@ -236,6 +238,71 @@ export const hardDelete = [
       await questionService.hardDelete(id);
       success(res, null, '题目已彻底删除');
     } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// AI 生成题目（管理员）
+// 注意：AI 生成的题目默认状态为 PENDING，需要人工审核后才能上架
+export const generateByAI = [
+  authMiddleware,
+  body('category').isIn(['CLASSIC', 'HORROR', 'LOGIC', 'WARM']).withMessage('无效的分类'),
+  body('prompts').optional().isArray().withMessage('提示词必须是数组'),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        error(res, ErrorCode.BAD_REQUEST, errors.array()[0].msg);
+        return;
+      }
+
+      const { category, prompts = [] } = req.body;
+
+      logger.info(`AI 生成题目请求: 分类=${category}, 提示词=${prompts.join(',')}`);
+
+      // 调用 AI 生成题目
+      const generated = await aiService.generateQuestion(
+        category as QuestionCategory,
+        prompts
+      );
+
+      // 内容安全审核
+      const moderation = await aiService.moderateContent(
+        `${generated.surface} ${generated.bottom}`
+      );
+
+      if (!moderation.passed) {
+        error(res, ErrorCode.BAD_REQUEST, `内容审核不通过: ${moderation.reason}`);
+        return;
+      }
+
+      // 创建题目，默认状态为 PENDING（需要人工审核）
+      const question = await questionService.create({
+        surface: generated.surface,
+        bottom: generated.bottom,
+        category: category as QuestionCategory,
+        hints: generated.hints,
+        keywords: generated.keywords,
+        source: 'AI_GENERATED',
+        aiGeneratedBy: 'qwen3.5-plus',
+      });
+
+      // ⚠️ 重要：AI 生成的题目默认状态为 PENDING
+      // 需要管理员在后台审核通过后才能被抽取
+      await questionService.update(question.id, { status: 'PENDING' });
+
+      logger.info(`AI 生成题目成功: id=${question.id}, 状态=PENDING（待审核）`);
+
+      success(res, {
+        question,
+        message: '题目已生成，状态为待审核。请前往管理后台审核通过后才能上架。',
+        status: 'PENDING',
+        needReview: true,
+      }, 'AI 生成题目成功，请审核后上架');
+    } catch (err) {
+      logger.error('AI 生成题目失败:', err);
       next(err);
     }
   },

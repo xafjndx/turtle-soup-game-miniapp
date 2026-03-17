@@ -28,6 +28,9 @@ router.get('/question/categories', questionController.getCategories);
 router.get('/question/draw', questionController.drawQuestion);
 router.get('/question/:id', questionController.getQuestionDetail);
 
+// AI 生成题目（管理员）
+router.post('/question/generate', authMiddleware, questionController.generateByAI);
+
 // ==================== 游戏相关路由 ====================
 
 // 需要登录的路由

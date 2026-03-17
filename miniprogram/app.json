@@ -4,7 +4,8 @@
     "pages/index/index",
     "pages/game/game",
     "pages/profile/profile",
-    "pages/leaderboard/leaderboard"
+    "pages/leaderboard/leaderboard",
+    "pages/privacy/privacy"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -42,9 +43,15 @@
   "sitemapLocation": "sitemap.json",
   "permission": {
     "scope.record": {
-      "desc": "用于语音输入答题"
+      "desc": "用于语音输入答题，您的语音数据仅用于本次识别，识别完成后立即删除，不会被存储。"
     }
   },
-  "requiredPrivateInfos": [],
+  "requiredPrivateInfos": [
+    "chooseAddress"
+  ],
+  "__privacyDeclaration__": {
+    "code": 1,
+    "statement": "我们会在首次启动时向您展示隐私政策，您同意后才会收集和使用您的个人信息。我们收集的信息仅用于：1）用户登录和身份识别；2）游戏记录和排行榜展示；3）语音转文字功能（数据即时处理不存储）。您可以随时在个人中心查看、更正或删除您的个人信息。"
+  },
   "lazyCodeLoading": "requiredComponents"
 }

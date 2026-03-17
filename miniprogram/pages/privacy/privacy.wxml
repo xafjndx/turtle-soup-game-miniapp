@@ -1,0 +1,121 @@
+<view class="privacy-container">
+  <view class="privacy-header">
+    <text class="title">海龟汤游戏隐私政策</text>
+    <text class="update-time">更新日期：2026年3月17日</text>
+    <text class="effective-time">生效日期：2026年3月17日</text>
+  </view>
+
+  <view class="privacy-content">
+    <view class="section">
+      <text class="section-title">引言</text>
+      <text class="section-text">欢迎您使用海龟汤游戏小程序（以下简称"本小程序"）。我们深知个人信息对您的重要性，并会尽全力保护您的个人信息安全。我们致力于维持您对我们的信任，恪守以下原则，保护您的个人信息：权责一致原则、目的明确原则、选择同意原则、最少够用原则、确保安全原则、主体参与原则、公开透明原则等。</text>
+      <text class="section-text">本隐私政策将帮助您了解以下内容：1. 我们如何收集和使用您的个人信息；2. 我们如何使用 Cookie 和同类技术；3. 我们如何共享、转让、公开披露您的个人信息；4. 我们如何保护您的个人信息；5. 您如何管理您的个人信息；6. 我们如何处理未成年人的个人信息；7. 本隐私政策如何更新；8. 如何联系我们。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">一、我们如何收集和使用您的个人信息</text>
+      
+      <view class="subsection">
+        <text class="subsection-title">1.1 用户注册与登录</text>
+        <text class="section-text">当您使用微信登录时，我们会收集您的微信OpenID用于身份识别。您可以选择授权我们获取您的微信昵称和头像，这些信息将用于在游戏内展示您的个人资料。如果您不授权，不会影响您使用本小程序的基本功能。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">1.2 游戏功能</text>
+        <text class="section-text">在您使用游戏功能时，我们会收集以下信息：</text>
+        <text class="section-text">• 游戏记录：包括您玩过的题目、游戏时长、胜负结果等，用于统计您的游戏数据并展示在排行榜中。</text>
+        <text class="section-text">• 语音输入：当您使用语音输入功能时，我们会将您的语音数据发送至第三方语音识别服务进行文字转换，转换完成后立即删除原始语音数据，不会存储您的语音信息。</text>
+        <text class="section-text">• 文字输入：您在游戏中输入的问题和猜测会暂时存储，用于AI判定和游戏记录，游戏结束后可查看历史记录。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">1.3 排行榜功能</text>
+        <text class="section-text">为了展示排行榜功能，我们会在排行榜中展示您的昵称、头像和游戏统计数据（胜率、游戏场次等）。您可以在个人中心设置是否在排行榜中展示。</text>
+      </view>
+    </view>
+
+    <view class="section">
+      <text class="section-title">二、我们如何共享、转让、公开披露您的个人信息</text>
+      
+      <view class="subsection">
+        <text class="subsection-title">2.1 共享</text>
+        <text class="section-text">我们不会与任何第三方共享您的个人信息，但以下情况除外：</text>
+        <text class="section-text">• 获得您的明确同意后；</text>
+        <text class="section-text">• 根据法律法规的规定或行政、司法机关的要求；</text>
+        <text class="section-text">• 为了保护我们、我们的用户或其他人的权益。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">2.2 第三方服务</text>
+        <text class="section-text">我们使用以下第三方服务：</text>
+        <text class="section-text">• 微信开放平台：用于用户登录和支付功能</text>
+        <text class="section-text">• 阿里云语音识别：用于语音转文字功能（数据即时处理，不存储）</text>
+        <text class="section-text">• 阿里云百炼AI服务：用于游戏AI判定功能</text>
+      </view>
+    </view>
+
+    <view class="section">
+      <text class="section-title">三、我们如何保护您的个人信息</text>
+      <text class="section-text">我们采取以下安全措施保护您的个人信息：</text>
+      <text class="section-text">• 使用HTTPS加密传输数据</text>
+      <text class="section-text">• 使用JWT令牌进行身份认证</text>
+      <text class="section-text">• 敏感数据加密存储</text>
+      <text class="section-text">• 定期进行安全审计</text>
+      <text class="section-text">• 限制员工访问个人信息的权限</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">四、您如何管理您的个人信息</text>
+      
+      <view class="subsection">
+        <text class="subsection-title">4.1 访问和查询</text>
+        <text class="section-text">您可以在"个人中心"页面查看您的个人信息和游戏记录。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">4.2 更正和补充</text>
+        <text class="section-text">您可以在"个人中心"页面修改您的昵称和头像。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">4.3 删除</text>
+        <text class="section-text">您可以通过以下方式申请删除您的个人信息：</text>
+        <text class="section-text">• 在"个人中心"页面申请注销账号</text>
+        <text class="section-text">• 联系我们的客服邮箱申请删除</text>
+        <text class="section-text">注销账号后，我们将删除您的所有个人信息，但法律法规另有规定的除外。</text>
+      </view>
+
+      <view class="subsection">
+        <text class="subsection-title">4.4 撤回同意</text>
+        <text class="section-text">您可以在手机系统设置中管理对本小程序的授权，也可以在小程序设置中管理各项权限。</text>
+      </view>
+    </view>
+
+    <view class="section">
+      <text class="section-title">五、未成年人保护</text>
+      <text class="section-text">我们非常重视对未成年人个人信息的保护：</text>
+      <text class="section-text">• 本小程序适合14周岁以上用户使用</text>
+      <text class="section-text">• 如果您是14周岁以下的未成年人，请在监护人的陪同下使用本小程序</text>
+      <text class="section-text">• 如果您是14周岁以上18周岁以下的未成年人，请在监护人的指导下使用本小程序</text>
+      <text class="section-text">• 对于"恐怖悬疑"分类的题目，建议18周岁以上用户游玩</text>
+      <text class="section-text">• 我们不会主动收集未成年人的个人信息，如发现误收集，将尽快删除</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">六、本隐私政策如何更新</text>
+      <text class="section-text">我们可能会适时修订本隐私政策。未经您明确同意，我们不会削减您依照本隐私政策所应享有的权利。对于重大变更，我们会以推送通知、弹窗等方式向您告知。</text>
+    </view>
+
+    <view class="section">
+      <text class="section-title">七、如何联系我们</text>
+      <text class="section-text">如果您对本隐私政策有任何疑问、意见或建议，可通过以下方式与我们联系：</text>
+      <text class="section-text">• 电子邮箱：privacy@example.com</text>
+      <text class="section-text">• 客服电话：400-XXX-XXXX</text>
+      <text class="section-text">我们将在15个工作日内回复您的请求。</text>
+    </view>
+  </view>
+
+  <view class="privacy-footer">
+    <text class="footer-text">海龟汤游戏 版权所有</text>
+  </view>
+</view>

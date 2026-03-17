@@ -43,9 +43,13 @@
         <nav>
           <a href="#" data-page="dashboard" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2 active">📊 数据概览</a>
           <a href="#" data-page="questions" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">📝 题目管理</a>
-          <a href="#" data-page="crawler" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">🕷️ 爬虫管理</a>
+          <a href="#" data-page="review" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">✅ 审核中心</a>
           <a href="#" data-page="logs" class="block py-2 px-4 rounded hover:bg-indigo-800 mb-2">📋 操作日志</a>
         </nav>
+        <div class="mt-8 pt-8 border-t border-indigo-700 text-xs text-indigo-300">
+          <p>⚠️ 爬虫功能已禁用</p>
+          <p class="mt-1">题目来源：人工添加</p>
+        </div>
         <div class="mt-8 pt-8 border-t border-indigo-700">
           <button id="logoutBtn" class="text-indigo-300 hover:text-white">退出登录</button>
         </div>
@@ -140,43 +144,44 @@
           </div>
         </div>
 
-        <!-- 爬虫管理 -->
-        <div id="crawlerPage" class="page hidden">
-          <h2 class="text-2xl font-bold mb-6">爬虫管理</h2>
+        <!-- 审核中心 -->
+        <div id="reviewPage" class="page hidden">
+          <h2 class="text-2xl font-bold mb-6">审核中心</h2>
           
-          <div class="bg-white p-6 rounded-xl shadow mb-6">
-            <h3 class="text-lg font-bold mb-4">手动触发爬虫</h3>
-            <p class="text-gray-500 mb-4">立即执行一次爬虫任务，从贴吧等平台抓取新题目。</p>
-            <button id="triggerCrawler" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-              🕷️ 开始抓取
-            </button>
-            <div id="crawlerStatus" class="mt-4 text-gray-500"></div>
+          <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <span class="text-2xl">⚠️</span>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-yellow-700">
+                  AI 生成的题目需要人工审核后才能上架。请仔细检查题目内容是否合规，避免出现敏感、不当内容。
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div class="bg-white p-6 rounded-xl shadow">
-            <h3 class="text-lg font-bold mb-4">爬虫配置</h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div class="font-medium">贴吧 - 海龟汤吧</div>
-                  <div class="text-sm text-gray-500">tieba.baidu.com</div>
-                </div>
-                <span class="badge badge-success">已启用</span>
-              </div>
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div class="font-medium">小红书</div>
-                  <div class="text-sm text-gray-500">xiaohongshu.com</div>
-                </div>
-                <span class="badge badge-warning">待配置</span>
-              </div>
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <div class="font-medium">剧本杀论坛</div>
-                  <div class="text-sm text-gray-500">jubensha.com</div>
-                </div>
-                <span class="badge badge-warning">待配置</span>
-              </div>
+          <div class="grid grid-cols-3 gap-6 mb-6">
+            <div class="card bg-white p-6 rounded-xl shadow">
+              <div class="text-3xl font-bold text-yellow-600" id="statPending">-</div>
+              <div class="text-gray-500 mt-2">待审核题目</div>
+            </div>
+            <div class="card bg-white p-6 rounded-xl shadow">
+              <div class="text-3xl font-bold text-green-600" id="statApproved">-</div>
+              <div class="text-gray-500 mt-2">已通过题目</div>
+            </div>
+            <div class="card bg-white p-6 rounded-xl shadow">
+              <div class="text-3xl font-bold text-red-600" id="statRejected">-</div>
+              <div class="text-gray-500 mt-2">已拒绝题目</div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow overflow-hidden">
+            <div class="p-4 bg-gray-50 border-b">
+              <h3 class="font-bold">待审核题目列表</h3>
+            </div>
+            <div id="reviewList" class="divide-y divide-gray-200">
+              <div class="p-8 text-center text-gray-500">加载中...</div>
             </div>
           </div>
         </div>
@@ -292,6 +297,7 @@
         
         if (page === 'dashboard') loadDashboard();
         if (page === 'questions') loadQuestions();
+        if (page === 'review') loadReviewList();
         if (page === 'logs') loadLogs();
       };
     });
@@ -407,14 +413,93 @@
       }
     }
 
-    // 触发爬虫
-    document.getElementById('triggerCrawler').onclick = async () => {
+    // 加载审核列表
+    async function loadReviewList() {
       try {
-        document.getElementById('crawlerStatus').textContent = '爬虫任务已启动，请稍后刷新查看结果...';
-        await request('/admin/crawler/trigger', { method: 'POST' });
+        // 加载待审核题目
+        const pendingResult = await request('/admin/questions?status=PENDING&pageSize=10');
+        
+        // 更新统计
+        const stats = await request('/admin/statistics');
+        document.getElementById('statPending').textContent = stats.questions.pending || 0;
+        document.getElementById('statApproved').textContent = stats.questions.total || 0;
+        document.getElementById('statRejected').textContent = 0;
+
+        const categoryNames = { CLASSIC: '经典推理', HORROR: '恐怖悬疑', LOGIC: '逻辑陷阱', WARM: '温情反转' };
+        const sourceNames = { PLATFORM: '平台预设', CRAWLER: '爬虫抓取', AI_GENERATED: 'AI生成' };
+
+        if (pendingResult.list.length === 0) {
+          document.getElementById('reviewList').innerHTML = `
+            <div class="p-8 text-center text-gray-500">
+              <span class="text-4xl">🎉</span>
+              <p class="mt-2">暂无待审核题目</p>
+            </div>
+          `;
+          return;
+        }
+
+        const html = pendingResult.list.map(q => `
+          <div class="p-4 hover:bg-gray-50">
+            <div class="flex justify-between items-start mb-2">
+              <span class="badge ${q.source === 'AI_GENERATED' ? 'badge-info' : 'badge-warning'}">${sourceNames[q.source]}</span>
+              <span class="badge badge-info">${categoryNames[q.category]}</span>
+            </div>
+            <div class="mb-2">
+              <p class="text-sm text-gray-500">汤面：</p>
+              <p class="text-sm font-medium">${q.surface}</p>
+            </div>
+            <div class="mb-2">
+              <p class="text-sm text-gray-500">汤底：</p>
+              <p class="text-sm">${q.bottom}</p>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <button onclick="approveQuestion('${q.id}')" class="bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700">✓ 通过</button>
+              <button onclick="rejectQuestion('${q.id}')" class="bg-red-600 text-white px-4 py-1 rounded text-sm hover:bg-red-700">✗ 拒绝</button>
+              <button onclick="viewQuestion('${q.id}')" class="bg-gray-600 text-white px-4 py-1 rounded text-sm hover:bg-gray-700">查看详情</button>
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('reviewList').innerHTML = html;
       } catch (err) {
-        document.getElementById('crawlerStatus').textContent = '启动失败: ' + err.message;
+        console.error('加载审核列表失败:', err);
+        document.getElementById('reviewList').innerHTML = `
+          <div class="p-8 text-center text-red-500">加载失败: ${err.message}</div>
+        `;
       }
+    }
+
+    // 审核通过题目
+    window.approveQuestion = async (id) => {
+      try {
+        await request('/admin/question/' + id + '/status', {
+          method: 'PUT',
+          body: JSON.stringify({ status: 'APPROVED' }),
+        });
+        alert('审核通过！');
+        loadReviewList();
+      } catch (err) {
+        alert('操作失败: ' + err.message);
+      }
+    };
+
+    // 拒绝题目
+    window.rejectQuestion = async (id) => {
+      try {
+        await request('/admin/question/' + id + '/status', {
+          method: 'PUT',
+          body: JSON.stringify({ status: 'REJECTED' }),
+        });
+        alert('已拒绝该题目');
+        loadReviewList();
+      } catch (err) {
+        alert('操作失败: ' + err.message);
+      }
+    };
+
+    // 查看题目详情
+    window.viewQuestion = (id) => {
+      alert('题目ID: ' + id + '\n\n详情功能开发中...');
     };
 
     // 搜索和筛选
