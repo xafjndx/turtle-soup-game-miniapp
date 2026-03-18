@@ -335,36 +335,47 @@ class AIService {
       ? Math.round((matchedKeywords.length / keywords.length) * 100)
       : 0;
 
-    // 简单的肯定/否定词检测
-    const positiveWords = ['是', '对', '正确', '真的', '确实'];
-    const negativeWords = ['不', '不是', '没有', '没', '错误', '假的'];
-    
     let answerType: AnswerType = 'IRRELEVANT';
     let aiResponse = '这个问题与汤底关系不大，请换个角度提问。';
 
-    if (matchedKeywords.length > 0) {
-      // 有关键词匹配
-      if (hitRate >= 50) {
+    // 只有在猜测模式下才判断是否正确
+    if (isGuess) {
+      // 必须重合率达到85%以上才算猜对
+      if (hitRate >= 85) {
+        answerType = 'CORRECT';
+        aiResponse = '恭喜你猜对了！';
+      } else if (hitRate >= 50) {
         answerType = 'PARTIAL';
-        aiResponse = '有些地方是对的，继续深入思考。';
+        aiResponse = `接近了，当前重合率${hitRate}%，需要达到85%才算猜对。`;
+      } else if (matchedKeywords.length > 0) {
+        answerType = 'PARTIAL';
+        aiResponse = `有些关键词对了，但重合率只有${hitRate}%，继续努力！`;
       } else {
+        answerType = 'NO';
+        aiResponse = '这个猜测不对，请再想想。';
+      }
+    } else {
+      // 提问模式：判断问题相关性
+      if (matchedKeywords.length > 0) {
         answerType = 'YES';
         aiResponse = '这个方向是对的，请继续。';
-      }
-    }
-
-    // 检查是否猜对大部分内容
-    if (isGuess && hitRate >= 85) {
-      answerType = 'CORRECT';
-      aiResponse = '恭喜你猜对了！';
-    }
-
-    // 检查否定词
-    for (const word of negativeWords) {
-      if (input.includes(word) && matchedKeywords.length === 0) {
-        answerType = 'NO';
-        aiResponse = '不是这样的，请再想想。';
-        break;
+      } else {
+        // 检查否定词
+        const negativeWords = ['不', '不是', '没有', '没', '错误', '假的'];
+        let hasNegative = false;
+        for (const word of negativeWords) {
+          if (input.includes(word)) {
+            hasNegative = true;
+            break;
+          }
+        }
+        if (hasNegative) {
+          answerType = 'NO';
+          aiResponse = '不是这样的，请再想想。';
+        } else {
+          answerType = 'IRRELEVANT';
+          aiResponse = '这个问题与汤底关系不大，请换个角度提问。';
+        }
       }
     }
 
@@ -372,7 +383,7 @@ class AIService {
       answerType,
       aiResponse,
       hitRate,
-      isHit: hitRate >= config.game.hitThreshold,
+      isHit: isGuess && hitRate >= config.game.hitThreshold, // 只有猜测模式且重合率达标才算命中
     };
   }
 
@@ -390,11 +401,12 @@ class AIService {
 
     const systemPrompt = `你是一个海龟汤题目创作专家。请根据给定的提示词创作一个高质量的题目。
 
-要求：
-1. 汤面：简短有趣的谜题情境（50-150字）
-2. 汤底：意想不到但又合理的答案（100-300字）
-3. 提示：3个由浅入深的提示
-4. 关键词：5-10个核心关键词
+【重要要求】
+1. 汤面（surface）：简短有趣的谜题情境，50-100字，不要透露答案
+2. 汤底（bottom）：意想不到但又合理的答案，80-150字，简洁明了
+3. 汤面和汤底要逻辑连贯，不能生搬硬套
+4. 提示（hints）：3个由浅入深的提示
+5. 关键词（keywords）：5-8个核心关键词
 
 回复格式（JSON）：
 {

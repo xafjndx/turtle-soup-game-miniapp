@@ -16,23 +16,6 @@
     </view>
   </view>
 
-  <!-- 回合历史 -->
-  <view class="rounds-section" wx:if="{{rounds.length > 0}}">
-    <view class="section-title">对话记录</view>
-    <scroll-view scroll-y class="rounds-list">
-      <view class="round-item" wx:for="{{rounds}}" wx:key="id">
-        <view class="player-input">
-          <text class="tag">问</text>
-          <text class="text">{{item.playerInput}}</text>
-        </view>
-        <view class="ai-response">
-          <text class="tag {{item.answerType}}">{{item.answerType === 'YES' ? '是' : item.answerType === 'NO' ? '否' : item.answerType === 'IRRELEVANT' ? '无关' : '部分正确'}}</text>
-          <text class="text">{{item.aiResponse}}</text>
-        </view>
-      </view>
-    </scroll-view>
-  </view>
-
   <!-- 输入区域 -->
   <view class="input-section">
     <!-- 输入方式选择 -->
@@ -81,6 +64,27 @@
     </view>
   </view>
 
+  <!-- 回合历史（移到最下面） -->
+  <view class="rounds-section" wx:if="{{rounds.length > 0}}">
+    <view class="section-title">对话记录（共{{rounds.length}}轮）</view>
+    <scroll-view scroll-y class="rounds-list" scroll-into-view="round-{{rounds.length}}">
+      <view class="round-item" wx:for="{{rounds}}" wx:key="id" id="round-{{index + 1}}">
+        <view class="round-header">
+          <text class="round-num">第{{index + 1}}轮</text>
+          <text class="round-action">{{item.action === 'GUESS' ? '猜测' : '提问'}}</text>
+        </view>
+        <view class="player-input">
+          <text class="tag ask">问</text>
+          <text class="text">{{item.playerInput}}</text>
+        </view>
+        <view class="ai-response">
+          <text class="tag {{item.answerType}}">{{item.answerType === 'YES' ? '是' : item.answerType === 'NO' ? '否' : item.answerType === 'IRRELEVANT' ? '无关' : item.answerType === 'CORRECT' ? '猜中' : '部分正确'}}</text>
+          <text class="text">{{item.aiResponse}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 提示弹窗 -->
   <view class="hint-modal" wx:if="{{currentHint}}" bindtap="onCloseHint">
     <view class="hint-content" catchtap="stopPropagation">
@@ -106,32 +110,29 @@
   <!-- 结果弹窗 -->
   <view class="result-modal" wx:if="{{showResultModal}}">
     <view class="modal-mask"></view>
-    <view class="modal-content">
+    <view class="modal-content result-content">
       <view class="result-icon">{{gameResult.result === 'WIN' ? '🎉' : '😮'}}</view>
       <view class="result-title">{{gameResult.result === 'WIN' ? '恭喜猜中！' : '游戏结束'}}</view>
       <view class="result-hit-rate" wx:if="{{gameResult.hitRate}}">
-        重合率：{{gameResult.hitRate}}%
+        最终重合率：{{gameResult.hitRate}}%
       </view>
+      
+      <!-- 汤底展示 -->
       <view class="result-answer" wx:if="{{revealedAnswer && gameResult.answer}}">
         <view class="label">【汤底】</view>
         <view class="text">{{gameResult.answer}}</view>
       </view>
-      <view class="modal-btns">
+      
+      <!-- AI题目入库按钮（在汤底下面） -->
+      <view class="save-question-section" wx:if="{{session.questionSource === 'AI_GENERATED'}}">
+        <button class="btn-save-question" bindtap="onSaveQuestion">加入题库</button>
+        <button class="btn-skip-save" bindtap="onSkipSave">跳过</button>
+      </view>
+      
+      <!-- 结束按钮 -->
+      <view class="modal-btns end-btns">
         <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
         <button class="btn-home" bindtap="onBackHome">返回首页</button>
-      </view>
-    </view>
-  </view>
-
-  <!-- AI 题目入库弹窗 -->
-  <view class="save-modal" wx:if="{{showSaveQuestion}}">
-    <view class="modal-mask"></view>
-    <view class="modal-content">
-      <view class="modal-title">是否将此题目加入题库？</view>
-      <view class="modal-desc">您的贡献将帮助更多玩家体验这道题目</view>
-      <view class="modal-btns">
-        <button class="btn-save" bindtap="onSaveQuestion">加入题库</button>
-        <button class="btn-skip" bindtap="onSkipSave">不了</button>
       </view>
     </view>
   </view>

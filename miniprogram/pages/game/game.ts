@@ -308,7 +308,7 @@ Page({
 
   // 查看汤底
   async onViewAnswer() {
-    this.setData({ showEndModal: false, revealedAnswer: true });
+    this.setData({ showEndModal: false, revealedAnswer: true, showSaveQuestion: false });
     await this.finishGame('QUIT', true);
     // 显示结果弹窗
     this.setData({ showResultModal: true });
@@ -316,7 +316,7 @@ Page({
 
   // 保留神秘感
   async onKeepMystery() {
-    this.setData({ showEndModal: false, revealedAnswer: false });
+    this.setData({ showEndModal: false, revealedAnswer: false, showSaveQuestion: false });
     await this.finishGame('QUIT', false);
     // 显示结果弹窗
     this.setData({ showResultModal: true });
@@ -370,8 +370,13 @@ Page({
   async onSaveQuestion() {
     try {
       const { session } = this.data;
+      if (!session || !session.id) {
+        wx.showToast({ title: '会话信息丢失', icon: 'none' });
+        return;
+      }
       await saveAIQuestion(session.id);
       wx.showToast({ title: '已加入题库', icon: 'success' });
+      // 不关闭弹窗，只是隐藏保存按钮
       this.setData({ showSaveQuestion: false });
     } catch (err: any) {
       wx.showToast({ title: err.message || '保存失败', icon: 'none' });
