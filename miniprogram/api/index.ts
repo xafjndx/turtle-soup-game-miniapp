@@ -23,14 +23,14 @@ export interface LoginResult {
   isNewUser: boolean;
 }
 
-// 用户登录
+// 用户登录（公开接口，不需要登录）
 export function login(username: string): Promise<LoginResult> {
-  return post<LoginResult>('/user/login', { username });
+  return post<LoginResult>('/user/login', { username }, false);
 }
 
-// 微信登录
+// 微信登录（公开接口，不需要登录）
 export function wechatLogin(openId: string, nickname?: string, avatarUrl?: string): Promise<LoginResult> {
-  return post<LoginResult>('/user/login', { openId, nickname, avatarUrl });
+  return post<LoginResult>('/user/login', { openId, nickname, avatarUrl }, false);
 }
 
 // 获取用户信息

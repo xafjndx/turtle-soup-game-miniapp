@@ -72,22 +72,22 @@ export function get<T = any>(url: string, data?: any, needAuth: boolean = true):
 /**
  * POST 请求
  */
-export function post<T = any>(url: string, data?: any): Promise<T> {
-  return request<T>({ url, method: 'POST', data });
+export function post<T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> {
+  return request<T>({ url, method: 'POST', data, needAuth });
 }
 
 /**
  * PUT 请求
  */
-export function put<T = any>(url: string, data?: any): Promise<T> {
-  return request<T>({ url, method: 'PUT', data });
+export function put<T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> {
+  return request<T>({ url, method: 'PUT', data, needAuth });
 }
 
 /**
  * DELETE 请求
  */
-export function del<T = any>(url: string, data?: any): Promise<T> {
-  return request<T>({ url, method: 'DELETE', data });
+export function del<T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> {
+  return request<T>({ url, method: 'DELETE', data, needAuth });
 }
 
 export default { request, get, post, put, del };
