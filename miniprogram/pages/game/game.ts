@@ -125,20 +125,74 @@ Page({
 
   // 录音结束处理
   async handleRecordingEnd(res: any) {
-    wx.hideLoading();
+    wx.showLoading({ title: '语音识别中...', icon: 'loading' });
     
-    // 显示提示让用户手动输入
-    wx.showModal({
-      title: '语音输入',
-      content: '语音识别功能正在开发中，请使用文字输入',
-      confirmText: '切换文字',
-      showCancel: true,
-      success: (modalRes) => {
-        if (modalRes.confirm) {
-          this.setData({ inputMode: 'TEXT' });
-        }
+    try {
+      // 读取音频文件并转为 base64
+      const fileInfo = await new Promise<string>((resolve, reject) => {
+        wx.getFileSystemManager().readFile({
+          filePath: res.tempFilePath,
+          encoding: 'base64',
+          success: (fileRes) => resolve(fileRes.data as string),
+          fail: reject,
+        });
+      });
+      
+      // 调用后端语音识别 API
+      const token = wx.getStorageSync('token');
+      const response = await new Promise<any>((resolve, reject) => {
+        wx.request({
+          url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/voice/recognize',
+          method: 'POST',
+          data: {
+            audio: fileInfo,
+            format: 'mp3',
+          },
+          header: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+          },
+          success: (res: any) => resolve(res.data),
+          fail: reject,
+        });
+      });
+      
+      wx.hideLoading();
+      
+      if (response.code === 0 && response.data.text) {
+        this.setData({ playerInput: response.data.text });
+        wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
+      } else if (response.data?.fallback) {
+        // 语音识别失败，提示用户
+        wx.showModal({
+          title: '语音识别失败',
+          content: response.data.error || '请使用文字输入',
+          confirmText: '切换文字',
+          showCancel: true,
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              this.setData({ inputMode: 'TEXT' });
+            }
+          },
+        });
+      } else {
+        throw new Error(response.message || '识别失败');
       }
-    });
+    } catch (err: any) {
+      wx.hideLoading();
+      console.error('语音识别失败:', err);
+      wx.showModal({
+        title: '语音识别失败',
+        content: '请使用文字输入，或检查网络后重试',
+        confirmText: '切换文字',
+        showCancel: true,
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            this.setData({ inputMode: 'TEXT' });
+          }
+        },
+      });
+    }
   },
 
   // 提交提问

@@ -3,6 +3,7 @@ import * as userController from '../controllers/userController';
 import * as questionController from '../controllers/questionController';
 import * as gameController from '../controllers/gameController';
 import * as adminController from '../controllers/adminController';
+import * as voiceController from '../controllers/voiceController';
 import { authMiddleware } from '../middlewares/auth';
 
 const router = Router();
@@ -74,5 +75,10 @@ router.get('/admin/logs', authMiddleware, adminController.getOperationLogs);
 router.get('/admin/ai-config', authMiddleware, adminController.getAIConfig);
 router.put('/admin/ai-config', authMiddleware, adminController.updateAIConfig);
 router.post('/admin/ai-config/test', authMiddleware, adminController.testAIConnection);
+
+// ==================== 语音识别路由 ====================
+
+// 语音识别（Base64 数据）
+router.post('/voice/recognize', voiceController.recognizeVoice);
 
 export default router;
