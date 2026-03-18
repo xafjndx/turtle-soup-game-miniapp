@@ -283,17 +283,79 @@ class AIService {
         };
       }
 
-      // 解析失败，返回默认结果
-      return {
-        answerType: 'IRRELEVANT' as AnswerType,
-        aiResponse: '无法确定，请换一种方式提问。',
-        hitRate: 0,
-        isHit: false,
-      };
+      // 解析失败，使用 fallback
+      return this.fallbackJudgment(question, playerInput, isGuess);
     } catch (error) {
-      logger.error('AI judgment failed:', error);
-      throw new Error('AI 判定失败');
+      logger.warn('AI judgment failed, using fallback:', error);
+      // AI 调用失败，使用 fallback 关键词匹配
+      return this.fallbackJudgment(question, playerInput, isGuess);
     }
+  }
+
+  // Fallback: 简单关键词匹配判定
+  private fallbackJudgment(
+    question: { surface: string; bottom: string; keywords: string[] },
+    playerInput: string,
+    isGuess: boolean
+  ): JudgmentResult {
+    const input = playerInput.toLowerCase();
+    const bottom = question.bottom.toLowerCase();
+    const keywords = Array.isArray(question.keywords) 
+      ? question.keywords 
+      : JSON.parse(question.keywords || '[]');
+    
+    // 检查关键词匹配
+    const matchedKeywords: string[] = [];
+    keywords.forEach((kw: string) => {
+      if (input.includes(kw.toLowerCase())) {
+        matchedKeywords.push(kw);
+      }
+    });
+
+    // 计算匹配率
+    const hitRate = keywords.length > 0 
+      ? Math.round((matchedKeywords.length / keywords.length) * 100)
+      : 0;
+
+    // 简单的肯定/否定词检测
+    const positiveWords = ['是', '对', '正确', '真的', '确实'];
+    const negativeWords = ['不', '不是', '没有', '没', '错误', '假的'];
+    
+    let answerType: AnswerType = 'IRRELEVANT';
+    let aiResponse = '这个问题与汤底关系不大，请换个角度提问。';
+
+    if (matchedKeywords.length > 0) {
+      // 有关键词匹配
+      if (hitRate >= 50) {
+        answerType = 'PARTIAL';
+        aiResponse = '有些地方是对的，继续深入思考。';
+      } else {
+        answerType = 'YES';
+        aiResponse = '这个方向是对的，请继续。';
+      }
+    }
+
+    // 检查是否猜对大部分内容
+    if (isGuess && hitRate >= 85) {
+      answerType = 'CORRECT';
+      aiResponse = '恭喜你猜对了！';
+    }
+
+    // 检查否定词
+    for (const word of negativeWords) {
+      if (input.includes(word) && matchedKeywords.length === 0) {
+        answerType = 'NO';
+        aiResponse = '不是这样的，请再想想。';
+        break;
+      }
+    }
+
+    return {
+      answerType,
+      aiResponse,
+      hitRate,
+      isHit: hitRate >= config.game.hitThreshold,
+    };
   }
 
   // AI 生成题目

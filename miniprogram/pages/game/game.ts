@@ -53,15 +53,29 @@ Page({
 
   async loadSession() {
     try {
-      const session = await getCurrentSession();
-      if (session) {
-        const question = wx.getStorageSync('currentQuestion');
+      // 优先从 storage 获取题目信息（开始游戏时保存的）
+      const question = wx.getStorageSync('currentQuestion');
+      const session = wx.getStorageSync('currentSession');
+      
+      if (question && session) {
         this.setData({
           session,
           question,
-          hintRemaining: session.hintRemaining,
-          rounds: session.rounds || [],
+          hintRemaining: session.hintRemaining || 3,
+          rounds: [],
         });
+        console.log('从 storage 加载游戏数据:', { question, session });
+      } else {
+        // 如果 storage 没有，尝试从 API 获取
+        const apiSession = await getCurrentSession();
+        if (apiSession) {
+          this.setData({
+            session: apiSession,
+            question: apiSession.question,
+            hintRemaining: apiSession.hintRemaining || 3,
+            rounds: apiSession.rounds || [],
+          });
+        }
       }
     } catch (err) {
       console.error('加载会话失败:', err);
@@ -222,6 +236,11 @@ Page({
     this.setData({ currentHint: '' });
   },
 
+  // 隐藏结束弹窗
+  hideEndModal() {
+    this.setData({ showEndModal: false });
+  },
+
   // 点击结束
   onEndGame() {
     this.setData({ showEndModal: true });
@@ -252,6 +271,12 @@ Page({
   async finishGame(result: 'WIN' | 'QUIT', revealedAnswer: boolean) {
     try {
       const { session } = this.data;
+      
+      if (!session || !session.id) {
+        wx.showToast({ title: '会话信息丢失', icon: 'none' });
+        return;
+      }
+      
       const res = await endGame(session.id, result, revealedAnswer);
       
       // 判断是否是 AI 生成的题目
@@ -265,9 +290,14 @@ Page({
           ...this.data.gameResult,
           result,
           answer: res.question?.bottom,
+          hitRate: this.data.gameResult?.hitRate,
         },
+        revealedAnswer,
       });
+      
+      console.log('游戏结束，结果:', this.data.gameResult);
     } catch (err: any) {
+      console.error('结束游戏失败:', err);
       wx.showToast({ title: err.message || '结束游戏失败', icon: 'none' });
     }
   },
