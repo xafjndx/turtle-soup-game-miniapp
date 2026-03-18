@@ -125,14 +125,20 @@ Page({
 
   // 录音结束处理
   async handleRecordingEnd(res: any) {
-    // TODO: 调用语音识别 API
-    wx.showToast({ title: '语音识别中...', icon: 'loading' });
+    wx.hideLoading();
     
-    // 模拟语音识别结果
-    setTimeout(() => {
-      wx.hideToast();
-      this.setData({ playerInput: '这是语音识别的结果（模拟）' });
-    }, 1000);
+    // 显示提示让用户手动输入
+    wx.showModal({
+      title: '语音输入',
+      content: '语音识别功能正在开发中，请使用文字输入',
+      confirmText: '切换文字',
+      showCancel: true,
+      success: (modalRes) => {
+        if (modalRes.confirm) {
+          this.setData({ inputMode: 'TEXT' });
+        }
+      }
+    });
   },
 
   // 提交提问
@@ -250,12 +256,16 @@ Page({
   async onViewAnswer() {
     this.setData({ showEndModal: false, revealedAnswer: true });
     await this.finishGame('QUIT', true);
+    // 显示结果弹窗
+    this.setData({ showResultModal: true });
   },
 
   // 保留神秘感
   async onKeepMystery() {
     this.setData({ showEndModal: false, revealedAnswer: false });
     await this.finishGame('QUIT', false);
+    // 显示结果弹窗
+    this.setData({ showResultModal: true });
   },
 
   // 游戏胜利
