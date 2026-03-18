@@ -32,7 +32,7 @@ export const config = {
   ai: {
     apiKey: process.env.ALIBABA_DASHSCOPE_API_KEY || '',
     model: process.env.QWEN_MODEL || 'qwen3.5-plus',
-    baseUrl: 'https://dashscope.aliyuncs.com/api/v1',
+    baseUrl: process.env.ALIBABA_DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/api/v1',
   },
 
   // 管理员配置
