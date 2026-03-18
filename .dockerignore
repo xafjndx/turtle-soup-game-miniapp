@@ -1,0 +1,32 @@
+# 依赖目录
+server/node_modules
+miniprogram/node_modules
+
+# 构建输出
+server/dist
+
+# 日志
+server/logs
+*.log
+
+# 环境变量
+server/.env
+.env
+.env.local
+
+# 数据库文件
+*.db
+*.db-journal
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# 文档
+README.md
+admin/
+*.md
