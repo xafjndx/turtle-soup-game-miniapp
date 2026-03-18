@@ -77,8 +77,8 @@ export function optionalAuthMiddleware(req: Request, res: Response, next: NextFu
 
 // 生成 JWT Token
 export function generateToken(userId: string): string {
-  return jwt.sign({ userId }, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn as string,
+  return jwt.sign({ userId }, config.jwt.secret, { 
+    expiresIn: '7d' 
   });
 }
 

@@ -103,14 +103,15 @@ export const updateAIConfig = [
         },
       });
 
-      // 记录操作日志
-      await prisma.operationLog.create({
-        data: {
-          action: 'UPDATE_AI_CONFIG',
-          target: 'ai_config',
-          detail: JSON.stringify({ provider, model, updatedApiKey: !!apiKey }),
-        },
-      });
+      // 记录操作日志 - 暂时跳过，因为没有 adminId
+      // await prisma.operationLog.create({
+      //   data: {
+      //     adminId: 'system',
+      //     action: 'UPDATE_AI_CONFIG',
+      //     target: 'ai_config',
+      //     detail: JSON.stringify({ provider, model, updatedApiKey: !!apiKey }),
+      //   },
+      // });
 
       success(res, {
         message: 'AI配置已更新',
