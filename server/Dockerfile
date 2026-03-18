@@ -3,6 +3,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# 安装 OpenSSL（Prisma 需要）
+RUN apk add --no-cache openssl
+
 # 安装依赖
 COPY package*.json ./
 RUN npm ci --only=production
@@ -16,8 +19,12 @@ RUN npx prisma generate
 # 构建 TypeScript
 RUN npm run build
 
+# 运行数据库迁移（需要在启动时执行）
+# 创建启动脚本
+RUN echo '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js' > start.sh && chmod +x start.sh
+
 # 暴露端口
 EXPOSE 80
 
 # 启动命令
-CMD ["node", "dist/app.js"]
+CMD ["./start.sh"]
