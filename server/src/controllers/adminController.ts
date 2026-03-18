@@ -10,6 +10,15 @@ import config from '../config';
 type QuestionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SOFT_DELETED' | 'HARD_DELETED';
 type QuestionCategory = 'CLASSIC' | 'HORROR' | 'LOGIC' | 'WARM';
 
+// 状态常量
+const QuestionStatusValues = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  SOFT_DELETED: 'SOFT_DELETED',
+  HARD_DELETED: 'HARD_DELETED',
+} as const;
+
 // ==================== AI 模型配置管理 ====================
 
 // 获取 AI 配置
@@ -99,7 +108,7 @@ export const updateAIConfig = [
         data: {
           action: 'UPDATE_AI_CONFIG',
           target: 'ai_config',
-          detail: { provider, model, updatedApiKey: !!apiKey },
+          detail: JSON.stringify({ provider, model, updatedApiKey: !!apiKey }),
         },
       });
 
@@ -284,7 +293,7 @@ export const getStatistics = [
       // 按来源统计题目
       const sourceStats = await prisma.question.groupBy({
         by: ['source'],
-        where: { status: QuestionStatus.APPROVED },
+        where: { status: 'APPROVED' },
         _count: true,
       });
 
@@ -490,7 +499,7 @@ export const batchDeleteQuestions = [
         await prisma.question.updateMany({
           where: { id: { in: ids } },
           data: {
-            status: QuestionStatus.HARD_DELETED,
+            status: 'HARD_DELETED',
           },
         });
       } else {
@@ -498,7 +507,7 @@ export const batchDeleteQuestions = [
         await prisma.question.updateMany({
           where: { id: { in: ids } },
           data: {
-            status: QuestionStatus.SOFT_DELETED,
+            status: 'SOFT_DELETED',
             softDeletedAt: new Date(),
           },
         });
@@ -532,7 +541,7 @@ export const restoreQuestions = [
       await prisma.question.updateMany({
         where: { id: { in: ids } },
         data: {
-          status: QuestionStatus.APPROVED,
+          status: 'APPROVED',
           softDeletedAt: null,
         },
       });

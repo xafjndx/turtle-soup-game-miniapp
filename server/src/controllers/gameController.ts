@@ -155,11 +155,22 @@ export const submitRound = [
 
       // AI 判定
       const isGuess = action === 'GUESS';
+      
+      // 解析 keywords（数据库存储为 JSON 字符串）
+      let keywords: string[];
+      try {
+        keywords = Array.isArray(question.keywords) 
+          ? question.keywords 
+          : JSON.parse(question.keywords as string || '[]');
+      } catch {
+        keywords = [];
+      }
+      
       const judgment = await aiService.judgeAnswer(
         {
           surface: question.surface,
           bottom: question.bottom,
-          keywords: question.keywords as string[],
+          keywords,
         },
         playerInput,
         isGuess

@@ -285,7 +285,7 @@ class AIService {
 
       // 解析失败，返回默认结果
       return {
-        answerType: AnswerType.IRRELEVANT,
+        answerType: 'IRRELEVANT' as AnswerType,
         aiResponse: '无法确定，请换一种方式提问。',
         hitRate: 0,
         isHit: false,

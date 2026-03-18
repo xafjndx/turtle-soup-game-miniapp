@@ -136,12 +136,22 @@ class QuestionService {
 
   // 更新题目
   async update(id: string, data: Partial<CreateQuestionData> & { status?: QuestionStatus; quality?: number }) {
+    // 处理 hints 和 keywords，确保是字符串
+    const updateData: any = {
+      ...data,
+      updatedAt: new Date(),
+    };
+    
+    if (Array.isArray(data.hints)) {
+      updateData.hints = JSON.stringify(data.hints);
+    }
+    if (Array.isArray(data.keywords)) {
+      updateData.keywords = JSON.stringify(data.keywords);
+    }
+    
     return prisma.question.update({
       where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      },
+      data: updateData,
     });
   }
 
