@@ -112,38 +112,42 @@ class AIService {
     }
   }
 
-  // 阿里百炼 API
+  // 阿里百炼 API（OpenAI 兼容格式）
   private async callAlibabaAPI(config: AIConfig, prompt: string, systemPrompt?: string): Promise<string> {
     try {
+      // 使用 OpenAI 兼容的 API 格式
+      const url = config.baseUrl 
+        ? `${config.baseUrl}/chat/completions`
+        : 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+      
+      logger.info('Calling Alibaba API:', { url, model: config.model });
+      
       const response = await axios.post(
-        config.baseUrl || DASHSCOPE_API,
+        url,
         {
           model: config.model,
-          input: {
-            messages: [
-              ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-              { role: 'user', content: prompt },
-            ],
-          },
-          parameters: {
-            result_format: 'message',
-          },
+          messages: [
+            ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+            { role: 'user', content: prompt },
+          ],
         },
         {
           headers: {
             'Authorization': `Bearer ${config.apiKey}`,
             'Content-Type': 'application/json',
           },
+          timeout: 30000,
         }
       );
 
-      return response.data.output.choices[0].message.content;
+      return response.data.choices[0].message.content;
     } catch (error: any) {
       logger.error('AI API call failed:', {
         error: error.message,
         response: error.response?.data,
+        status: error.response?.status,
       });
-      throw new Error(`AI API 调用失败: ${error.message}`);
+      throw new Error(`AI API 调用失败: ${error.response?.data?.error?.message || error.message}`);
     }
   }
 

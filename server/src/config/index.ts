@@ -31,8 +31,8 @@ export const config = {
   // 阿里百炼 AI 配置
   ai: {
     apiKey: process.env.ALIBABA_DASHSCOPE_API_KEY || '',
-    model: process.env.QWEN_MODEL || 'qwen3.5-plus',
-    baseUrl: process.env.ALIBABA_DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+    model: process.env.QWEN_MODEL || 'qwen-plus',
+    baseUrl: process.env.ALIBABA_DASHSCOPE_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   },
 
   // 管理员配置
