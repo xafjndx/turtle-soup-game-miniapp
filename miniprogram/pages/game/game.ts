@@ -24,9 +24,9 @@ Page({
     // 结束弹窗
     showEndModal: false,
     showResultModal: false,
+    showEndChoice: false,  // 结束选择弹窗
     gameResult: null as any,
     revealedAnswer: false,
-    showSaveQuestion: false,
     
     // 录音
     isRecording: false,
@@ -308,18 +308,18 @@ Page({
 
   // 查看汤底
   async onViewAnswer() {
-    this.setData({ showEndModal: false, revealedAnswer: true, showSaveQuestion: false });
+    this.setData({ showEndModal: false, revealedAnswer: true });
     await this.finishGame('QUIT', true);
-    // 显示结果弹窗
+    // 显示结果弹窗（包含汤底和加入题库按钮）
     this.setData({ showResultModal: true });
   },
 
   // 保留神秘感
   async onKeepMystery() {
-    this.setData({ showEndModal: false, revealedAnswer: false, showSaveQuestion: false });
+    this.setData({ showEndModal: false, revealedAnswer: false });
     await this.finishGame('QUIT', false);
-    // 显示结果弹窗
-    this.setData({ showResultModal: true });
+    // 直接显示结束选择
+    this.setData({ showEndChoice: true });
   },
 
   // 游戏胜利
@@ -342,11 +342,6 @@ Page({
       }
       
       const res = await endGame(session.id, result, revealedAnswer);
-      
-      // 判断是否是 AI 生成的题目
-      if (session.questionSource === 'AI_GENERATED') {
-        this.setData({ showSaveQuestion: true });
-      }
       
       // 更新游戏结果
       this.setData({
@@ -376,8 +371,8 @@ Page({
       }
       await saveAIQuestion(session.id);
       wx.showToast({ title: '已加入题库', icon: 'success' });
-      // 不关闭弹窗，只是隐藏保存按钮
-      this.setData({ showSaveQuestion: false });
+      // 关闭汤底展示，显示结束选择
+      this.setData({ showResultModal: false, showEndChoice: true });
     } catch (err: any) {
       wx.showToast({ title: err.message || '保存失败', icon: 'none' });
     }
@@ -385,7 +380,8 @@ Page({
 
   // 不保存题目
   onSkipSave() {
-    this.setData({ showSaveQuestion: false });
+    // 关闭汤底展示，显示结束选择
+    this.setData({ showResultModal: false, showEndChoice: true });
   },
 
   // 再来一局

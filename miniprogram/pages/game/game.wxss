@@ -481,3 +481,24 @@
   background: #e8f5e9;
   color: #4caf50;
 }
+
+/* 结束选择弹窗 */
+.end-choice-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.end-choice-modal .modal-content {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx;
+  width: 80%;
+  max-width: 600rpx;
+}
