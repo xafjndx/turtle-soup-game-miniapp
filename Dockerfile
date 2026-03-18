@@ -29,5 +29,9 @@ RUN npm prune --production
 # 暴露端口
 EXPOSE 80
 
-# 启动命令 - 先运行数据库迁移，再启动服务
-CMD npx prisma migrate deploy && node dist/app.js
+# 设置环境变量
+ENV PORT=80
+ENV NODE_ENV=production
+
+# 启动命令
+CMD ["sh", "-c", "npx prisma migrate deploy && echo 'Starting server...' && node dist/app.js"]
