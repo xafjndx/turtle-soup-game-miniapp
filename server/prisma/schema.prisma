@@ -45,20 +45,20 @@ model Admin {
 
 model Question {
   id            String        @id @default(uuid())
-  title         String?
-  surface       String
-  bottom        String
-  category      String        @default("CLASSIC")
-  hints         String
-  keywords      String
-  source        String        @default("PLATFORM")
-  aiGeneratedBy String?
+  title         String?       @db.VarChar(100)
+  surface       String        @db.Text
+  bottom        String        @db.Text
+  category      String        @default("CLASSIC") @db.VarChar(20)
+  hints         String        @db.Text
+  keywords      String        @db.Text
+  source        String        @default("PLATFORM") @db.VarChar(20)
+  aiGeneratedBy String?       @db.VarChar(100)
   aiGeneratedAt DateTime?
-  crawlSource   String?
-  crawlUrl      String?
+  crawlSource   String?       @db.VarChar(100)
+  crawlUrl      String?       @db.VarChar(500)
   crawledAt     DateTime?
   addedAt       DateTime?
-  status        String        @default("APPROVED")
+  status        String        @default("APPROVED") @db.VarChar(20)
   softDeletedAt DateTime?
   quality       Int           @default(3)
   playCount     Int           @default(0)
@@ -116,12 +116,12 @@ model Round {
   id            String      @id @default(uuid())
   sessionId     String
   roundNumber   Int
-  inputMode     String
-  playerInput   String
-  inputAudioUrl String?
-  answerType    String?
-  aiResponse    String?
-  action        String
+  inputMode     String       @db.VarChar(10)
+  playerInput   String       @db.Text
+  inputAudioUrl String?      @db.VarChar(500)
+  answerType    String?      @db.VarChar(20)
+  aiResponse    String?      @db.Text
+  action        String       @db.VarChar(10)
   createdAt     DateTime    @default(now())
   session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
