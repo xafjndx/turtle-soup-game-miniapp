@@ -65,8 +65,8 @@ export function request<T = any>(options: RequestOptions): Promise<T> {
 /**
  * GET 请求
  */
-export function get<T = any>(url: string, data?: any): Promise<T> {
-  return request<T>({ url, method: 'GET', data });
+export function get<T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> {
+  return request<T>({ url, method: 'GET', data, needAuth });
 }
 
 /**

@@ -57,9 +57,9 @@ export function deleteAccount(): Promise<{ message: string; deletedAt: string }>
   return del('/user/delete');
 }
 
-// 获取账号列表
+// 获取账号列表（公开接口，不需要登录）
 export function getUserList(): Promise<User[]> {
-  return get<User[]>('/user/list');
+  return get<User[]>('/user/list', undefined, false);
 }
 
 // ==================== 排行榜相关 ====================
@@ -74,9 +74,9 @@ export interface LeaderboardItem {
   winCount: number;
 }
 
-// 获取 TOP3
+// 获取 TOP3（公开接口，不需要登录）
 export function getTop3(): Promise<LeaderboardItem[]> {
-  return get<LeaderboardItem[]>('/leaderboard/top3');
+  return get<LeaderboardItem[]>('/leaderboard/top3', undefined, false);
 }
 
 // 获取完整排行榜
