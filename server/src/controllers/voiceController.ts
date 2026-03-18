@@ -39,37 +39,3 @@ export const recognizeVoice = [
     }
   },
 ];
-
-/**
- * 小程序上传音频文件识别
- * POST /api/voice/upload
- * FormData: audio file
- */
-export const uploadVoice = [
-  authMiddleware,
-
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (!req.file) {
-        error(res, ErrorCode.BAD_REQUEST, '请上传音频文件');
-        return;
-      }
-
-      // 将文件转换为 base64
-      const audioBase64 = req.file.buffer.toString('base64');
-      const format = req.file.mimetype.includes('mp3') ? 'mp3' : 
-                     req.file.mimetype.includes('wav') ? 'wav' : 'pcm';
-
-      // 调用语音识别服务
-      const text = await voiceService.recognize(audioBase64, format);
-
-      success(res, { text });
-    } catch (err: any) {
-      success(res, { 
-        text: '', 
-        error: err.message || '语音识别失败',
-        fallback: true 
-      });
-    }
-  },
-];
