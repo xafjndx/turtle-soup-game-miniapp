@@ -26,11 +26,8 @@ RUN npm run build
 # 删除 devDependencies 减小镜像体积
 RUN npm prune --production
 
-# 创建启动脚本
-RUN echo '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js' > start.sh && chmod +x start.sh
-
 # 暴露端口
 EXPOSE 80
 
-# 启动命令
-CMD ["./start.sh"]
+# 启动命令 - 先运行数据库迁移，再启动服务
+CMD npx prisma migrate deploy && node dist/app.js
