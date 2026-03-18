@@ -385,11 +385,17 @@ Page({
 
   // 再来一局
   onPlayAgain() {
-    wx.redirectTo({ url: '/pages/index/index' });
+    // 清除当前游戏数据
+    wx.removeStorageSync('currentSession');
+    wx.removeStorageSync('currentQuestion');
+    // 首页是 tabBar 页面，必须用 switchTab
+    wx.switchTab({ url: '/pages/index/index' });
   },
 
   // 返回首页
   onBackHome() {
+    wx.removeStorageSync('currentSession');
+    wx.removeStorageSync('currentQuestion');
     wx.switchTab({ url: '/pages/index/index' });
   },
 });

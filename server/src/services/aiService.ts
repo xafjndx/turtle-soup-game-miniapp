@@ -238,28 +238,28 @@ class AIService {
     playerInput: string,
     isGuess: boolean
   ): Promise<JudgmentResult> {
-    const systemPrompt = `你是一个海龟汤游戏的裁判。你的任务是判定玩家的回答是否正确。
+    const systemPrompt = `你是一个海龟汤游戏的裁判。你的任务是判定玩家的提问或猜测。
 
-海龟汤是一种情境推理游戏：
-- 汤面：给玩家的谜题情境
-- 汤底：真实答案
-- 玩家通过提问和猜测来还原真相
+【重要规则 - 绝对禁止】
+1. 绝对不能在回复中透露汤底的任何内容！
+2. 只能回答"是"、"否"、"无关"、"部分正确"
+3. 回复要简短，不要给出任何提示或线索
 
 判定规则：
-1. "是" - 玩家的陈述与核心事实一致
-2. "否" - 玩家的陈述与核心事实矛盾
-3. "无关" - 玩家的陈述不影响推理
-4. "部分正确" - 接近但未完全命中
+1. "YES" - 玩家的陈述与汤底中的核心事实一致
+2. "NO" - 玩家的陈述与汤底矛盾
+3. "IRRELEVANT" - 玩家的陈述与汤底无关，不影响推理
+4. "PARTIAL" - 部分正确，接近但未完全命中
 
-如果玩家在猜答案，计算重合率（玩家猜测与答案关键词匹配的比例）。
-重合率 ≥ 85% 判定为命中。
+猜测判定：
+- 计算玩家猜测与汤底关键词的匹配度
+- 匹配度 ≥ 85% 判定为 CORRECT（完全猜中）
 
-回复格式：
+回复格式（JSON）：
 {
   "answerType": "YES|NO|IRRELEVANT|PARTIAL|CORRECT",
-  "response": "给玩家的简短回复（不超过50字）",
-  "hitRate": 0-100,
-  "matchedKeywords": ["匹配的关键词"]
+  "response": "简短回复，只能是：是、否、无关、部分正确，或恭喜猜中",
+  "hitRate": 0-100
 }`;
 
     const prompt = `汤面：${question.surface}
@@ -268,7 +268,7 @@ class AIService {
 
 玩家${isGuess ? '猜测' : '提问'}：${playerInput}
 
-请判定玩家的回答。`;
+请判定并按JSON格式回复。记住：绝对不能透露汤底内容！`;
 
     try {
       const result = await this.callAPI(prompt, systemPrompt);
@@ -279,9 +279,23 @@ class AIService {
         const parsed = JSON.parse(jsonMatch[0]);
         const hitRate = parsed.hitRate || 0;
         
+        // 过滤回复，确保不泄露汤底
+        let aiResponse = parsed.response || '';
+        // 如果回复太长或包含汤底关键词，替换为简短回复
+        if (aiResponse.length > 50) {
+          const answerMap: Record<string, string> = {
+            'YES': '是',
+            'NO': '否',
+            'IRRELEVANT': '无关',
+            'PARTIAL': '部分正确',
+            'CORRECT': '恭喜猜中！'
+          };
+          aiResponse = answerMap[parsed.answerType] || '请换种方式提问';
+        }
+        
         return {
           answerType: parsed.answerType as AnswerType,
-          aiResponse: parsed.response,
+          aiResponse,
           hitRate,
           isHit: hitRate >= config.game.hitThreshold,
         };

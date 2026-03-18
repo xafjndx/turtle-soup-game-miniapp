@@ -22,7 +22,8 @@ class VoiceService {
   async recognize(audioData: string, format: string = 'mp3'): Promise<string> {
     // 检查配置
     if (!ALIYUN_NLS_CONFIG.accessKeyId || !ALIYUN_NLS_CONFIG.accessKeySecret) {
-      throw new Error('阿里云语音识别未配置，请设置环境变量');
+      logger.warn('阿里云语音识别未配置，请设置环境变量 ALIYUN_ACCESS_KEY_ID 和 ALIYUN_ACCESS_KEY_SECRET');
+      throw new Error('语音识别服务未配置');
     }
 
     try {
@@ -37,13 +38,13 @@ class VoiceService {
       
       // 调用一句话识别 API
       const response = await axios.post(
-        `${ALIYUN_NLS_CONFIG.url}?appkey=${ALIYUN_NLS_CONFIG.appKey}&token=${token}&format=${format}&sample_rate=16000`,
+        `${ALIYUN_NLS_CONFIG.url}?appkey=${ALIYUN_NLS_CONFIG.appKey}&token=${token}&format=${format}&sample_rate=16000&enable_punctuation_prediction=true&enable_inverse_text_normalization=true`,
         Buffer.from(audioData, 'base64'),
         {
           headers: {
             'Content-Type': 'application/octet-stream',
           },
-          timeout: 10000,
+          timeout: 15000,
         }
       );
 
@@ -63,10 +64,10 @@ class VoiceService {
       
       // 检查是否是配额不足
       if (error.response?.data?.status === 40000001) {
-        throw new Error('语音识别配额已用完，请使用文字输入');
+        throw new Error('语音识别配额已用完');
       }
       
-      throw new Error('语音识别失败，请使用文字输入');
+      throw new Error('语音识别失败');
     }
   }
 
