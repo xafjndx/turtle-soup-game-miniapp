@@ -16,6 +16,7 @@
   "dependencies": {
     "@prisma/client": "^5.10.0",
     "prisma": "^5.10.0",
+    "tsx": "^4.7.0",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "cheerio": "^1.0.0-rc.12",
@@ -42,7 +43,6 @@
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
   "engines": {

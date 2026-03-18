@@ -23,7 +23,7 @@ RUN npx prisma generate
 # 构建 TypeScript
 RUN npm run build
 
-# 删除 devDependencies 减小镜像体积
+# 删除 devDependencies 减小镜像体积（保留 prisma 用于迁移）
 RUN npm prune --production
 
 # 暴露端口
@@ -33,5 +33,5 @@ EXPOSE 80
 ENV PORT=80
 ENV NODE_ENV=production
 
-# 启动命令
-CMD ["sh", "-c", "npx prisma migrate deploy && echo 'Starting server...' && node dist/app.js"]
+# 启动命令：迁移数据库 -> 运行seed脚本 -> 启动服务
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts && echo 'Starting server...' && node dist/app.js"]
