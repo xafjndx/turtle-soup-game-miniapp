@@ -39,15 +39,24 @@
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    }
+    },
+    "compileWorklet": false,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": [
+      "typescript"
+    ],
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
-  "compileType": "miniprogram",
   "libVersion": "3.3.4",
-  "appid": "请填写你的AppID",
+  "appid": "wxd1592cc4a7beec9f",
   "projectname": "turtle-soup-game",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "simulatorPluginLibVersion": {}
 }

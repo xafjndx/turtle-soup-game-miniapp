@@ -30,11 +30,15 @@ logs/
 npm-debug.log*
 
 # Prisma
-prisma/*.db
-prisma/*.db-journal
+server/prisma/*.db
+server/prisma/*.db-journal
 
 # WeChat DevTools
 miniprogram_npm/
+
+# TypeScript compiled JS files in miniprogram
+miniprogram/**/*.js
+!miniprogram/assets/**/*.js
 
 # Temporary files
 *.tmp

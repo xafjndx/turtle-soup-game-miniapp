@@ -1,22 +1,24 @@
 {
   "description": "海龟汤游戏小程序",
   "setting": {
-    "compileHotReLoad": true
+    "compileHotReLoad": true,
+    "urlCheck": true,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "skylineRenderEnable": false,
+    "preloadBackgroundData": false,
+    "autoAudits": false,
+    "useApiHook": true,
+    "showShadowRootInWxmlPanel": true,
+    "useStaticServer": false,
+    "useLanDebug": false,
+    "showES6CompileOption": false,
+    "checkInvalidKey": true,
+    "ignoreDevUnusedFiles": true,
+    "bigPackageSizeSupport": false,
+    "useIsolateContext": true
   },
-  "condition": {
-    "miniprogram": {
-      "list": [
-        {
-          "name": "首页",
-          "pathName": "pages/index/index",
-          "query": ""
-        },
-        {
-          "name": "登录",
-          "pathName": "pages/login/login",
-          "query": ""
-        }
-      ]
-    }
-  }
+  "condition": {},
+  "libVersion": "2.31.0",
+  "projectname": "%E6%B5%B7%E9%BE%9F%E6%B1%A4%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F"
 }
