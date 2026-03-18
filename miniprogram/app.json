@@ -23,15 +23,21 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "assets/images/home.png",
+        "selectedIconPath": "assets/images/home-active.png"
       },
       {
         "pagePath": "pages/leaderboard/leaderboard",
-        "text": "排行"
+        "text": "排行",
+        "iconPath": "assets/images/rank.png",
+        "selectedIconPath": "assets/images/rank-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "assets/images/profile.png",
+        "selectedIconPath": "assets/images/profile-active.png"
       }
     ]
   },
