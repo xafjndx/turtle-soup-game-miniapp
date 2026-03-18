@@ -15,7 +15,7 @@ interface ApiResponse<T = any> {
   timestamp: number;
 }
 
-const BASE_URL = 'https://your-domain.com/api'; // 替换为实际后端地址
+const BASE_URL = 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api';
 
 /**
  * 封装的请求方法
