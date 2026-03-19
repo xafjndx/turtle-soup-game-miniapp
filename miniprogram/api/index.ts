@@ -141,6 +141,19 @@ export function submitQuestion(data: SubmitQuestionData): Promise<SubmitQuestion
   return post<SubmitQuestionResult>('/question/submit', data);
 }
 
+// 投稿排行榜
+export interface SubmitLeaderboardItem {
+  rank: number;
+  userId: string;
+  nickname: string;
+  avatarUrl?: string;
+  submitCount: number;
+}
+
+export function getSubmitLeaderboard(limit = 10): Promise<SubmitLeaderboardItem[]> {
+  return get<SubmitLeaderboardItem[]>('/question/submit/leaderboard', { limit }, false);
+}
+
 // ==================== 管理员功能 ====================
 
 export interface AdminStats {

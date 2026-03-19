@@ -1,5 +1,18 @@
 <!--pages/submit-question/submit-question.wxml-->
 <view class="container">
+  <!-- 投稿排行 -->
+  <view class="leaderboard-section" wx:if="{{leaderboard.length > 0}}">
+    <view class="section-title">🏆 投稿排行榜</view>
+    <view class="leaderboard-list">
+      <view class="leaderboard-item" wx:for="{{leaderboard}}" wx:key="userId">
+        <view class="rank rank-{{item.rank}}">{{item.rank}}</view>
+        <image class="avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
+        <text class="nickname">{{item.nickname}}</text>
+        <text class="count">{{item.submitCount}}题</text>
+      </view>
+    </view>
+  </view>
+
   <!-- 投稿须知 -->
   <view class="notice-bar" bindtap="onViewGuide">
     <text class="notice-icon">📖</text>

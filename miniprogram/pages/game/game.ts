@@ -27,6 +27,7 @@ Page({
     showEndChoice: false,  // 结束选择弹窗
     gameResult: null as any,
     revealedAnswer: false,
+    savedToBank: false,  // 是否已加入题库
     
     // 录音
     isRecording: false,
@@ -327,8 +328,21 @@ Page({
     this.setData({ 
       gameResult: { hitRate, result: 'WIN' },
       showResultModal: true,
+      revealedAnswer: false,  // 默认不显示汤底
+      savedToBank: false,
     });
+    // 不立即结束游戏，让玩家选择
+  },
+
+  // 从结果弹窗查看汤底
+  async onViewAnswerFromResult() {
+    this.setData({ revealedAnswer: true });
     await this.finishGame('WIN', true);
+  },
+
+  // 继续游戏（不查看汤底）
+  onContinueGame() {
+    this.setData({ showResultModal: false });
   },
 
   // 结束游戏
@@ -371,8 +385,7 @@ Page({
       }
       await saveAIQuestion(session.id);
       wx.showToast({ title: '已加入题库', icon: 'success' });
-      // 关闭汤底展示，显示结束选择
-      this.setData({ showResultModal: false, showEndChoice: true });
+      this.setData({ savedToBank: true });
     } catch (err: any) {
       wx.showToast({ title: err.message || '保存失败', icon: 'none' });
     }
@@ -380,8 +393,7 @@ Page({
 
   // 不保存题目
   onSkipSave() {
-    // 关闭汤底展示，显示结束选择
-    this.setData({ showResultModal: false, showEndChoice: true });
+    this.setData({ savedToBank: true });
   },
 
   // 再来一局

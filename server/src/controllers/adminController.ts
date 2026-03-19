@@ -624,3 +624,207 @@ async function logOperation(
     console.error('记录操作日志失败:', err);
   }
 }
+
+// ==================== 用户管理 ====================
+
+// 获取用户列表
+export const getUsers = [
+  authMiddleware,
+  query('keyword').optional().isString(),
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('pageSize').optional().isInt({ min: 1, max: 100 }).toInt(),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { keyword, page = 1, pageSize = 50 } = req.query;
+
+      const where: any = {};
+      if (keyword) {
+        where.OR = [
+          { username: { contains: keyword as string } },
+          { nickname: { contains: keyword as string } },
+        ];
+      }
+
+      const [list, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (Number(page) - 1) * Number(pageSize),
+          take: Number(pageSize),
+          select: {
+            id: true,
+            username: true,
+            nickname: true,
+            avatarUrl: true,
+            totalGames: true,
+            winCount: true,
+            hitRate: true,
+            totalPlayTime: true,
+            createdAt: true,
+            lastPlayedAt: true,
+          },
+        }),
+        prisma.user.count({ where }),
+      ]);
+
+      success(res, { list, total });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// 更新用户信息
+export const updateUser = [
+  authMiddleware,
+  param('id').isString().withMessage('无效的用户ID'),
+  body('nickname').optional().isString(),
+  body('avatarUrl').optional().isString(),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        error(res, ErrorCode.BAD_REQUEST, errors.array()[0].msg);
+        return;
+      }
+
+      const { id } = req.params;
+      const { nickname, avatarUrl } = req.body;
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          ...(nickname !== undefined && { nickname }),
+          ...(avatarUrl !== undefined && { avatarUrl }),
+        },
+      });
+
+      await logOperation(req.userId!, 'UPDATE_USER', id, { nickname, avatarUrl });
+
+      success(res, user, '用户信息更新成功');
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// 删除用户
+export const deleteUser = [
+  authMiddleware,
+  param('id').isString().withMessage('无效的用户ID'),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      // 删除用户的所有关联数据
+      await prisma.round.deleteMany({
+        where: {
+          session: { userId: id },
+        },
+      });
+
+      await prisma.gameSession.deleteMany({
+        where: { userId: id },
+      });
+
+      await prisma.gameHistory.deleteMany({
+        where: { userId: id },
+      });
+
+      await prisma.admin.deleteMany({
+        where: { userId: id },
+      });
+
+      await prisma.user.delete({
+        where: { id },
+      });
+
+      await logOperation(req.userId!, 'DELETE_USER', id);
+
+      success(res, null, '用户已删除');
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// 更新题目（管理员）
+export const updateQuestion = [
+  authMiddleware,
+  param('id').isString().withMessage('无效的题目ID'),
+  body('category').optional().isIn(['CLASSIC', 'HORROR', 'LOGIC', 'WARM']),
+  body('surface').optional().isString(),
+  body('bottom').optional().isString(),
+  body('hints').optional().isArray(),
+  body('keywords').optional().isArray(),
+  body('status').optional().isIn(['PENDING', 'APPROVED', 'REJECTED']),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        error(res, ErrorCode.BAD_REQUEST, errors.array()[0].msg);
+        return;
+      }
+
+      const { id } = req.params;
+      const { category, surface, bottom, hints, keywords, status } = req.body;
+
+      const updateData: any = {
+        updatedAt: new Date(),
+      };
+
+      if (category) updateData.category = category;
+      if (surface) updateData.surface = surface;
+      if (bottom) updateData.bottom = bottom;
+      if (hints) updateData.hints = JSON.stringify(hints);
+      if (keywords) updateData.keywords = JSON.stringify(keywords);
+      if (status) {
+        updateData.status = status;
+        if (status === 'APPROVED') {
+          updateData.softDeletedAt = null;
+        }
+      }
+
+      const question = await prisma.question.update({
+        where: { id },
+        data: updateData,
+      });
+
+      await logOperation(req.userId!, 'UPDATE_QUESTION', id, { category, surface, bottom, status });
+
+      success(res, question, '题目更新成功');
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+// 删除题目
+export const deleteQuestion = [
+  authMiddleware,
+  param('id').isString().withMessage('无效的题目ID'),
+
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      await prisma.question.update({
+        where: { id },
+        data: {
+          status: 'SOFT_DELETED',
+          softDeletedAt: new Date(),
+        },
+      });
+
+      await logOperation(req.userId!, 'DELETE_QUESTION', id);
+
+      success(res, null, '题目已删除');
+    } catch (err) {
+      next(err);
+    }
+  },
+];

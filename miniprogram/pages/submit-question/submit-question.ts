@@ -1,5 +1,5 @@
 // pages/submit-question/submit-question.ts
-import { submitQuestion } from '../../api/index';
+import { submitQuestion, getSubmitLeaderboard, SubmitLeaderboardItem } from '../../api/index';
 
 const app = getApp<IAppOption>();
 
@@ -12,12 +12,26 @@ Page({
     hints: ['', '', ''],
     keywords: '',
     submitting: false,
+    leaderboard: [] as SubmitLeaderboardItem[],
     categories: [
       { value: 'CLASSIC', label: '经典推理', desc: '传统海龟汤，逻辑清晰' },
       { value: 'HORROR', label: '恐怖悬疑', desc: '带有恐怖元素，需年满18岁' },
       { value: 'LOGIC', label: '逻辑陷阱', desc: '需要巧妙思维才能解开' },
       { value: 'WARM', label: '温情反转', desc: '温馨感人，出人意料' },
     ],
+  },
+
+  onLoad() {
+    this.loadLeaderboard();
+  },
+
+  async loadLeaderboard() {
+    try {
+      const leaderboard = await getSubmitLeaderboard(10);
+      this.setData({ leaderboard });
+    } catch (err) {
+      console.error('加载投稿排行失败:', err);
+    }
   },
 
   // 输入标题

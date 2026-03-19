@@ -34,10 +34,22 @@
         "selectedIconPath": "assets/images/rank-active.png"
       },
       {
+        "pagePath": "pages/submit-question/submit-question",
+        "text": "投稿",
+        "iconPath": "assets/images/submit.png",
+        "selectedIconPath": "assets/images/submit-active.png"
+      },
+      {
         "pagePath": "pages/profile/profile",
         "text": "我的",
         "iconPath": "assets/images/profile.png",
         "selectedIconPath": "assets/images/profile-active.png"
+      },
+      {
+        "pagePath": "pages/admin/admin",
+        "text": "管理",
+        "iconPath": "assets/images/admin.png",
+        "selectedIconPath": "assets/images/admin-active.png"
       }
     ]
   },

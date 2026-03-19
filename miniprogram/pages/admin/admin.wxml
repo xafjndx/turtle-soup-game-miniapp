@@ -1,63 +1,196 @@
 <!--pages/admin/admin.wxml-->
 <view class="container">
-  <!-- 统计概览 -->
-  <view class="stats-section">
-    <view class="section-title">📊 数据概览</view>
-    <view class="stats-grid">
-      <view class="stat-card">
-        <text class="stat-value">{{stats.users.total || 0}}</text>
-        <text class="stat-label">总用户</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-value">{{stats.questions.total || 0}}</text>
-        <text class="stat-label">题目总数</text>
-      </view>
-      <view class="stat-card highlight">
-        <text class="stat-value">{{stats.questions.pending || 0}}</text>
-        <text class="stat-label">待审核</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-value">{{stats.games.total || 0}}</text>
-        <text class="stat-label">游戏总数</text>
-      </view>
+  <!-- 密码登录 -->
+  <view class="login-section" wx:if="{{!isLoggedIn}}">
+    <view class="login-card">
+      <text class="login-title">🔐 管理员登录</text>
+      <input 
+        class="password-input"
+        type="password"
+        placeholder="请输入管理密码"
+        password="{{true}}"
+        value="{{password}}"
+        bindinput="onInputPassword"
+      />
+      <button class="login-btn" bindtap="onLogin">登录</button>
+      <text class="login-tip" wx:if="{{loginError}}">{{loginError}}</text>
     </view>
   </view>
 
-  <!-- 待审核题目 -->
-  <view class="review-section">
-    <view class="section-title">📝 待审核题目 ({{pendingQuestions.length}})</view>
-    
-    <view class="empty-tip" wx:if="{{pendingQuestions.length === 0}}">
-      <text class="empty-icon">🎉</text>
-      <text class="empty-text">暂无待审核题目</text>
+  <!-- 管理界面 -->
+  <block wx:else>
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-item {{currentTab === 'overview' ? 'active' : ''}}" data-tab="overview" bindtap="switchTab">概览</view>
+      <view class="tab-item {{currentTab === 'users' ? 'active' : ''}}" data-tab="users" bindtap="switchTab">用户</view>
+      <view class="tab-item {{currentTab === 'questions' ? 'active' : ''}}" data-tab="questions" bindtap="switchTab">题库</view>
+      <view class="tab-item {{currentTab === 'pending' ? 'active' : ''}}" data-tab="pending" bindtap="switchTab">审核</view>
     </view>
 
-    <view class="question-list" wx:else>
-      <view class="question-card" wx:for="{{pendingQuestions}}" wx:key="id">
-        <view class="question-header">
-          <text class="question-source">{{item.source === 'AI_GENERATED' ? 'AI生成' : '用户投稿'}}</text>
-          <text class="question-category">{{item.category}}</text>
+    <!-- 概览 -->
+    <view class="tab-content" wx:if="{{currentTab === 'overview'}}">
+      <view class="stats-grid">
+        <view class="stat-card">
+          <text class="stat-value">{{stats.users?.total || 0}}</text>
+          <text class="stat-label">总用户</text>
         </view>
-        <view class="question-body">
-          <view class="question-row">
+        <view class="stat-card">
+          <text class="stat-value">{{stats.questions?.total || 0}}</text>
+          <text class="stat-label">题目总数</text>
+        </view>
+        <view class="stat-card highlight">
+          <text class="stat-value">{{stats.questions?.pending || 0}}</text>
+          <text class="stat-label">待审核</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-value">{{stats.games?.total || 0}}</text>
+          <text class="stat-label">游戏总数</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-value">{{stats.games?.winRate || '0%'}}</text>
+          <text class="stat-label">胜率</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-value">{{stats.games?.today || 0}}</text>
+          <text class="stat-label">今日游戏</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 用户管理 -->
+    <view class="tab-content" wx:if="{{currentTab === 'users'}}">
+      <view class="search-bar">
+        <input class="search-input" placeholder="搜索用户..." value="{{userSearch}}" bindinput="onSearchUser" />
+      </view>
+      <view class="user-list">
+        <view class="user-card" wx:for="{{filteredUsers}}" wx:key="id">
+          <view class="user-info">
+            <image class="user-avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
+            <view class="user-detail">
+              <text class="user-name">{{item.nickname || item.username}}</text>
+              <text class="user-stats">{{item.totalGames}}局 · {{item.hitRate}}%命中</text>
+            </view>
+          </view>
+          <view class="user-actions">
+            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditUser">编辑</button>
+            <button class="btn-delete" data-id="{{item.id}}" bindtap="onDeleteUser">删除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 题库管理 -->
+    <view class="tab-content" wx:if="{{currentTab === 'questions'}}">
+      <view class="search-bar">
+        <input class="search-input" placeholder="搜索题目..." value="{{questionSearch}}" bindinput="onSearchQuestion" />
+        <button class="btn-add" bindtap="onAddQuestion">+ 新增</button>
+      </view>
+      <view class="question-list">
+        <view class="question-card" wx:for="{{filteredQuestions}}" wx:key="id">
+          <view class="question-header">
+            <text class="question-category">{{item.category}}</text>
+            <text class="question-status status-{{item.status}}">{{item.status}}</text>
+          </view>
+          <view class="question-body">
             <text class="question-label">汤面：</text>
             <text class="question-text">{{item.surface}}</text>
           </view>
-          <view class="question-row">
-            <text class="question-label">汤底：</text>
-            <text class="question-text">{{item.bottom}}</text>
+          <view class="question-actions">
+            <button class="btn-view" data-id="{{item.id}}" bindtap="onViewQuestion">详情</button>
+            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditQuestion">编辑</button>
+            <button class="btn-delete" data-id="{{item.id}}" bindtap="onDeleteQuestion">删除</button>
           </view>
-        </view>
-        <view class="question-actions">
-          <button class="btn-reject" data-id="{{item.id}}" bindtap="onReject">拒绝</button>
-          <button class="btn-approve" data-id="{{item.id}}" bindtap="onApprove">通过</button>
         </view>
       </view>
     </view>
-  </view>
 
-  <!-- 提示信息 -->
-  <view class="tip-section">
-    <text class="tip-text">💡 完整管理功能请访问 Web 管理后台</text>
+    <!-- 待审核 -->
+    <view class="tab-content" wx:if="{{currentTab === 'pending'}}">
+      <view class="empty-tip" wx:if="{{pendingQuestions.length === 0}}">
+        <text class="empty-icon">🎉</text>
+        <text class="empty-text">暂无待审核题目</text>
+      </view>
+      <view class="question-list" wx:else>
+        <view class="question-card pending" wx:for="{{pendingQuestions}}" wx:key="id">
+          <view class="question-header">
+            <text class="question-source">{{item.source === 'AI_GENERATED' ? 'AI生成' : '用户投稿'}}</text>
+            <text class="question-category">{{item.category}}</text>
+          </view>
+          <view class="question-body">
+            <view class="question-row">
+              <text class="question-label">汤面：</text>
+              <text class="question-text">{{item.surface}}</text>
+            </view>
+            <view class="question-row">
+              <text class="question-label">汤底：</text>
+              <text class="question-text">{{item.bottom}}</text>
+            </view>
+            <view class="question-row">
+              <text class="question-label">提示：</text>
+              <text class="question-text">{{item.hints}}</text>
+            </view>
+          </view>
+          <view class="question-actions">
+            <button class="btn-reject" data-id="{{item.id}}" bindtap="onRejectQuestion">拒绝</button>
+            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditPending">修改</button>
+            <button class="btn-approve" data-id="{{item.id}}" bindtap="onApproveQuestion">通过</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<!-- 编辑用户弹窗 -->
+<view class="modal-mask" wx:if="{{showUserModal}}" bindtap="closeUserModal">
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-title">编辑用户</view>
+    <view class="modal-form">
+      <view class="form-item">
+        <text class="form-label">昵称</text>
+        <input class="form-input" value="{{editUser.nickname}}" bindinput="onInputUserNickname" />
+      </view>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeUserModal">取消</button>
+      <button class="btn-save" bindtap="onSaveUser">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑题目弹窗 -->
+<view class="modal-mask" wx:if="{{showQuestionModal}}" bindtap="closeQuestionModal">
+  <view class="modal-content question-modal" catchtap="stopPropagation">
+    <view class="modal-title">{{editQuestion.id ? '编辑题目' : '新增题目'}}</view>
+    <scroll-view scroll-y class="modal-form">
+      <view class="form-item">
+        <text class="form-label">分类</text>
+        <picker mode="selector" range="{{categories}}" range-key="label" value="{{categoryIndex}}" bindchange="onPickCategory">
+          <view class="picker-value">{{categories[categoryIndex].label}}</view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">汤面 *</text>
+        <textarea class="form-textarea" value="{{editQuestion.surface}}" bindinput="onInputSurface" placeholder="50-100字，简洁有趣" maxlength="150" />
+        <text class="char-count">{{editQuestion.surface?.length || 0}}/150</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">汤底 *</text>
+        <textarea class="form-textarea" value="{{editQuestion.bottom}}" bindinput="onInputBottom" placeholder="50字以内，逻辑严密" maxlength="100" />
+        <text class="char-count">{{editQuestion.bottom?.length || 0}}/100</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">提示（每行一个）</text>
+        <textarea class="form-textarea" value="{{editQuestion.hintsText}}" bindinput="onInputHints" placeholder="提示1&#10;提示2&#10;提示3" maxlength="200" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">关键词（逗号分隔）</text>
+        <input class="form-input" value="{{editQuestion.keywordsText}}" bindinput="onInputKeywords" placeholder="关键词1, 关键词2, 关键词3" />
+      </view>
+    </scroll-view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeQuestionModal">取消</button>
+      <button class="btn-save" bindtap="onSaveQuestion">保存</button>
+    </view>
   </view>
 </view>

@@ -27,6 +27,7 @@ router.delete('/user/delete', authMiddleware, userController.deleteAccount);  //
 
 // 公开路由
 router.get('/question/categories', questionController.getCategories);
+router.get('/question/submit/leaderboard', questionController.getSubmitLeaderboard);  // 投稿排行榜
 
 // 需要登录的路由
 router.get('/question/draw', questionController.drawQuestion);
@@ -55,6 +56,11 @@ router.post('/admin/login', adminController.adminLogin);
 // 统计数据
 router.get('/admin/statistics', authMiddleware, adminController.getStatistics);
 
+// 用户管理
+router.get('/admin/users', authMiddleware, adminController.getUsers);
+router.put('/admin/user/:id', authMiddleware, adminController.updateUser);
+router.delete('/admin/user/:id', authMiddleware, adminController.deleteUser);
+
 // 题目管理
 router.get('/admin/questions', authMiddleware, adminController.getQuestions);
 router.post('/admin/question/create', authMiddleware, questionController.create);  // 新增：手动创建题目
@@ -62,6 +68,8 @@ router.put('/admin/question/:id', authMiddleware, questionController.update);  /
 router.put('/admin/question/:id/status', authMiddleware, adminController.updateQuestionStatus);
 router.put('/admin/question/:id/category', authMiddleware, adminController.updateQuestionCategory);
 router.put('/admin/question/:id/quality', authMiddleware, adminController.updateQuestionQuality);
+router.put('/admin/question/:id', authMiddleware, adminController.updateQuestion);  // 更新题目内容
+router.delete('/admin/question/:id', authMiddleware, adminController.deleteQuestion);  // 删除题目
 router.post('/admin/questions/delete', authMiddleware, adminController.batchDeleteQuestions);
 router.post('/admin/questions/restore', authMiddleware, adminController.restoreQuestions);
 

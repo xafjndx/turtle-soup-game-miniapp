@@ -347,7 +347,8 @@ export const submitQuestion = [
         category: category as QuestionCategory,
         hints,
         keywords,
-        source: 'PLATFORM', // 用户投稿暂时标记为 PLATFORM
+        source: 'USER_SUBMITTED', // 用户投稿
+        submittedBy: req.userId,  // 记录投稿者
       });
 
       // ⚠️ 重要：用户投稿的题目默认状态为 PENDING
@@ -367,3 +368,14 @@ export const submitQuestion = [
     }
   },
 ];
+
+// 投稿排行榜
+export const getSubmitLeaderboard = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const leaderboard = await questionService.getSubmitLeaderboard(limit);
+    success(res, leaderboard);
+  } catch (err) {
+    next(err);
+  }
+};

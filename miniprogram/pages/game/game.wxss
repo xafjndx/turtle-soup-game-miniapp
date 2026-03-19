@@ -245,6 +245,20 @@
 .btn-hint {
   background: #fff3e0;
   color: #ff9800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.3;
+}
+
+.btn-hint .btn-text {
+  font-size: 26rpx;
+}
+
+.btn-hint .btn-num {
+  font-size: 22rpx;
+  opacity: 0.8;
 }
 
 .btn-ask {
@@ -255,6 +269,7 @@
 .btn-guess {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: #fff;
+  white-space: nowrap;
 }
 
 .btn-end {
@@ -470,6 +485,28 @@
   padding-top: 20rpx;
   border-top: 1rpx solid #eee;
   margin-top: 20rpx;
+}
+
+/* 结果弹窗按钮样式 */
+.result-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.result-btns button {
+  flex: 1;
+  min-width: calc(50% - 16rpx);
+}
+
+.btn-view-answer {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+.btn-continue {
+  background: #e3f2fd;
+  color: #1976d2;
 }
 
 .tag.ask {

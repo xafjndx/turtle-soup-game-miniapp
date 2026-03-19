@@ -2,112 +2,278 @@
 .container {
   min-height: 100vh;
   background: #f5f5f5;
+}
+
+/* 登录区域 */
+.login-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40rpx;
+}
+
+.login-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 60rpx 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.login-title {
+  display: block;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 40rpx;
+}
+
+.password-input {
+  width: 100%;
+  height: 88rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 30rpx;
+  font-size: 32rpx;
+  margin-bottom: 30rpx;
+}
+
+.login-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: bold;
+  border-radius: 12rpx;
+  border: none;
+}
+
+.login-btn::after {
+  border: none;
+}
+
+.login-tip {
+  display: block;
+  text-align: center;
+  font-size: 26rpx;
+  color: #ff4d4f;
+  margin-top: 20rpx;
+}
+
+/* Tab 切换 */
+.tab-bar {
+  display: flex;
+  background: #fff;
+  padding: 20rpx;
+  gap: 16rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 8rpx;
+}
+
+.tab-item.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+/* Tab 内容 */
+.tab-content {
   padding: 20rpx;
 }
 
-.section-title {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20rpx;
-}
-
-/* 统计概览 */
-.stats-section {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-}
-
+/* 统计网格 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16rpx;
 }
 
 .stat-card {
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 20rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
   text-align: center;
 }
 
 .stat-card.highlight {
-  background: #fff3e0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.stat-card.highlight .stat-value,
+.stat-card.highlight .stat-label {
+  color: #fff;
 }
 
 .stat-value {
   display: block;
-  font-size: 36rpx;
+  font-size: 48rpx;
   font-weight: bold;
   color: #333;
 }
 
-.stat-card.highlight .stat-value {
-  color: #ff9800;
-}
-
 .stat-label {
   display: block;
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: #999;
   margin-top: 8rpx;
 }
 
-/* 待审核题目 */
-.review-section {
+/* 搜索栏 */
+.search-bar {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+}
+
+.btn-add {
+  height: 72rpx;
+  padding: 0 30rpx;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 26rpx;
+  border-radius: 12rpx;
+  border: none;
+  line-height: 72rpx;
+}
+
+.btn-add::after {
+  border: none;
+}
+
+/* 用户列表 */
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.user-card {
   background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
 }
 
-.empty-tip {
-  text-align: center;
-  padding: 60rpx 0;
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
 }
 
-.empty-icon {
-  font-size: 80rpx;
+.user-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.user-detail {
+  flex: 1;
+}
+
+.user-name {
   display: block;
-  margin-bottom: 20rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
 }
 
-.empty-text {
-  font-size: 28rpx;
+.user-stats {
+  display: block;
+  font-size: 24rpx;
   color: #999;
+  margin-top: 4rpx;
 }
 
+.user-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+/* 题目列表 */
 .question-list {
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .question-card {
-  background: #f8f9fa;
-  border-radius: 12rpx;
-  padding: 20rpx;
-  border: 1rpx solid #eee;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.question-card.pending {
+  border-left: 6rpx solid #ff9800;
 }
 
 .question-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 16rpx;
 }
 
 .question-source {
   font-size: 22rpx;
-  color: #667eea;
-  background: #e8e4ff;
+  color: #ff9800;
+  background: #fff8e1;
   padding: 4rpx 12rpx;
-  border-radius: 8rpx;
+  border-radius: 6rpx;
 }
 
 .question-category {
   font-size: 22rpx;
-  color: #666;
+  color: #667eea;
+  background: #f0e8ff;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+}
+
+.question-status {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+}
+
+.status-APPROVED {
+  color: #4caf50;
+  background: #e8f5e9;
+}
+
+.status-PENDING {
+  color: #ff9800;
+  background: #fff8e1;
+}
+
+.status-REJECTED {
+  color: #f44336;
+  background: #ffebee;
+}
+
+.question-body {
+  margin-bottom: 16rpx;
 }
 
 .question-row {
@@ -117,7 +283,6 @@
 .question-label {
   font-size: 24rpx;
   color: #999;
-  margin-right: 8rpx;
 }
 
 .question-text {
@@ -128,42 +293,173 @@
 
 .question-actions {
   display: flex;
-  gap: 16rpx;
-  margin-top: 16rpx;
-  padding-top: 16rpx;
-  border-top: 1rpx solid #eee;
+  gap: 12rpx;
+  flex-wrap: wrap;
 }
 
-.btn-reject, .btn-approve {
-  flex: 1;
-  height: 64rpx;
-  font-size: 26rpx;
+/* 按钮样式 */
+.btn-view, .btn-edit, .btn-delete, .btn-approve, .btn-reject {
+  height: 60rpx;
+  font-size: 24rpx;
   border-radius: 8rpx;
   border: none;
+  padding: 0 24rpx;
+  line-height: 60rpx;
 }
 
-.btn-reject {
-  background: #fff;
-  color: #ff4d4f;
-  border: 1rpx solid #ff4d4f;
+.btn-view {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.btn-edit {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #f44336;
 }
 
 .btn-approve {
-  background: #52c41a;
-  color: #fff;
+  background: #e8f5e9;
+  color: #4caf50;
 }
 
-.btn-reject::after, .btn-approve::after {
+.btn-reject {
+  background: #ffebee;
+  color: #f44336;
+}
+
+/* 空状态 */
+.empty-tip {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  display: block;
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+}
+
+.modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  text-align: center;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.modal-form {
+  padding: 30rpx;
+  max-height: 50vh;
+}
+
+.question-modal .modal-form {
+  max-height: 60vh;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 72rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 120rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.picker-value {
+  height: 72rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  line-height: 72rpx;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 30rpx 30rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.btn-cancel, .btn-save {
+  flex: 1;
+  height: 80rpx;
+  font-size: 28rpx;
+  border-radius: 12rpx;
   border: none;
 }
 
-/* 提示信息 */
-.tip-section {
-  text-align: center;
-  padding: 40rpx 0;
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
 }
 
-.tip-text {
-  font-size: 24rpx;
-  color: #999;
+.btn-save {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+}
+
+.btn-cancel::after, .btn-save::after {
+  border: none;
 }

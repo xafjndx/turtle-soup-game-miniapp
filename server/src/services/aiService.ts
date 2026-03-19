@@ -245,21 +245,43 @@ class AIService {
 2. 只能回答"是"、"否"、"无关"、"部分正确"
 3. 回复要简短，不要给出任何提示或线索
 
-判定规则：
+【提问判定规则】
 1. "YES" - 玩家的陈述与汤底中的核心事实一致
 2. "NO" - 玩家的陈述与汤底矛盾
 3. "IRRELEVANT" - 玩家的陈述与汤底无关，不影响推理
 4. "PARTIAL" - 部分正确，接近但未完全命中
 
-猜测判定：
-- 计算玩家猜测与汤底关键词的匹配度
-- 匹配度 ≥ 85% 判定为 CORRECT（完全猜中）
+【猜测判定规则 - 非常重要！】
+猜测必须与完整汤底进行综合判定，不能只匹配一句话就算猜中！
+
+判定要素（每个要素占20%权重）：
+1. 汤底完整意思 - 是否理解了整个故事的真相
+2. 汤底背景信息 - 是否掌握了故事发生的背景
+3. 汤底角色关系 - 是否理清了角色之间的关系
+4. 角色的动作 - 是否还原了关键动作
+5. 前因后果 - 是否理解了事情的因果
+
+判定标准：
+- 重合度 ≥ 85% 才能判定为 CORRECT（猜中汤底）
+- 重合度 60-84% 为 PARTIAL（接近了）
+- 重合度 < 60% 为 NO（不对）
+
+【特别警告】
+不能因为玩家的一句话与汤底中某句话意思相近就直接判定猜中！
+必须评估玩家是否完整理解了汤底的全貌！
 
 回复格式（JSON）：
 {
   "answerType": "YES|NO|IRRELEVANT|PARTIAL|CORRECT",
-  "response": "简短回复，只能是：是、否、无关、部分正确，或恭喜猜中",
-  "hitRate": 0-100
+  "response": "简短回复",
+  "hitRate": 0-100,
+  "analysis": {
+    "fullMeaning": 0-20,
+    "background": 0-20,
+    "relationships": 0-20,
+    "actions": 0-20,
+    "causality": 0-20
+  }
 }`;
 
     const prompt = `汤面：${question.surface}
@@ -267,6 +289,8 @@ class AIService {
 关键词：${Array.isArray(question.keywords) ? question.keywords.join('、') : JSON.parse(question.keywords || '[]').join('、')}
 
 玩家${isGuess ? '猜测' : '提问'}：${playerInput}
+
+${isGuess ? '【这是猜测！请严格按照猜测判定规则，综合评估各要素后给出hitRate，≥85%才算猜中】' : '【这是提问，只需判断对错即可】'}
 
 请判定并按JSON格式回复。记住：绝对不能透露汤底内容！`;
 
@@ -330,29 +354,76 @@ class AIService {
       }
     });
 
-    // 计算匹配率
-    const hitRate = keywords.length > 0 
+    // 计算关键词匹配率
+    const keywordHitRate = keywords.length > 0 
       ? Math.round((matchedKeywords.length / keywords.length) * 100)
       : 0;
 
+    // 对于猜测模式，需要更严格的判定
+    // 检查玩家输入是否覆盖了汤底的主要要素
     let answerType: AnswerType = 'IRRELEVANT';
     let aiResponse = '这个问题与汤底关系不大，请换个角度提问。';
+    let hitRate = keywordHitRate;
 
     // 只有在猜测模式下才判断是否正确
     if (isGuess) {
-      // 必须重合率达到85%以上才算猜对
+      // 分析汤底的句子数量和复杂度
+      const bottomSentences = bottom.split(/[。！？.!?]/).filter(s => s.trim().length > 0);
+      const bottomWords = bottom.split(/[\s，,、；;：:]+/).filter(w => w.trim().length > 0);
+      
+      // 计算玩家输入覆盖汤底内容的程度
+      let coverageScore = 0;
+      
+      // 检查是否覆盖了多个句子（体现对完整故事的理解）
+      let sentenceCoverage = 0;
+      for (const sentence of bottomSentences) {
+        const sentenceWords = sentence.split(/[\s，,、；;：:]+/).filter(w => w.trim().length > 1);
+        let matchedInSentence = 0;
+        for (const word of sentenceWords) {
+          if (input.includes(word)) {
+            matchedInSentence++;
+          }
+        }
+        if (matchedInSentence > sentenceWords.length * 0.5) {
+          sentenceCoverage++;
+        }
+      }
+      
+      // 句子覆盖率（权重40%）
+      const sentenceRate = bottomSentences.length > 0 
+        ? (sentenceCoverage / bottomSentences.length) * 40 
+        : 0;
+      
+      // 关键词覆盖率（权重30%）
+      const keywordRate = keywordHitRate * 0.3;
+      
+      // 原文字数覆盖（权重30%）
+      let wordMatchCount = 0;
+      for (const word of bottomWords) {
+        if (word.length > 1 && input.includes(word)) {
+          wordMatchCount++;
+        }
+      }
+      const wordRate = bottomWords.length > 0 
+        ? (wordMatchCount / bottomWords.length) * 30 
+        : 0;
+      
+      // 综合得分
+      hitRate = Math.round(sentenceRate + keywordRate + wordRate);
+      
+      // 必须达到85%才算猜中
       if (hitRate >= 85) {
         answerType = 'CORRECT';
         aiResponse = '恭喜你猜对了！';
-      } else if (hitRate >= 50) {
+      } else if (hitRate >= 60) {
         answerType = 'PARTIAL';
-        aiResponse = `接近了，当前重合率${hitRate}%，需要达到85%才算猜对。`;
-      } else if (matchedKeywords.length > 0) {
+        aiResponse = `接近了！当前重合率${hitRate}%，需要达到85%才算猜中。继续努力！`;
+      } else if (hitRate >= 30) {
         answerType = 'PARTIAL';
-        aiResponse = `有些关键词对了，但重合率只有${hitRate}%，继续努力！`;
+        aiResponse = `有些对了，但重合率只有${hitRate}%。需要更完整地理解故事真相！`;
       } else {
         answerType = 'NO';
-        aiResponse = '这个猜测不对，请再想想。';
+        aiResponse = '这个猜测不对，请再想想故事的全貌。';
       }
     } else {
       // 提问模式：判断问题相关性
@@ -383,7 +454,7 @@ class AIService {
       answerType,
       aiResponse,
       hitRate,
-      isHit: isGuess && hitRate >= config.game.hitThreshold, // 只有猜测模式且重合率达标才算命中
+      isHit: isGuess && hitRate >= 85, // 只有猜测模式且重合率达到85%才算命中
     };
   }
 
@@ -399,27 +470,37 @@ class AIService {
       WARM: '温情反转',
     }[category];
 
-    const systemPrompt = `你是一个海龟汤题目创作专家。请根据给定的提示词创作一个高质量的题目。
+    const systemPrompt = `你是一个海龟汤题目创作专家。请创作一个高质量的海龟汤题目。
 
-【重要要求】
-1. 汤面（surface）：简短有趣的谜题情境，50-100字，不要透露答案
-2. 汤底（bottom）：意想不到但又合理的答案，必须控制在50字以内！简洁明了
-3. 汤面和汤底要逻辑连贯，不能生搬硬套
-4. 提示（hints）：3个由浅入深的提示
-5. 关键词（keywords）：5-8个核心关键词
+【字数要求 - 必须严格遵守！】
+1. 汤面（surface）：必须控制在30字以内！简洁有力，引发好奇
+2. 汤底（bottom）：必须控制在50字以内！逻辑严密，完整解释谜题
+
+【内容要求】
+1. 汤面：简短有趣的谜题情境，不透露答案，让人好奇
+2. 汤底：逻辑清晰，完整解释汤面的谜题，不故作玄虚，与汤面关联紧密
+3. 提示（hints）：3个由浅入深的提示
+4. 关键词（keywords）：3-5个核心关键词
+
+【质量标准】
+- 汤面要有悬念，吸引人想一探究竟
+- 汤底要合情合理，出人意料但逻辑自洽
+- 不能故作神秘让人看不懂
+- 避免过于简单或过于复杂的题目
 
 回复格式（JSON）：
 {
-  "surface": "汤面内容",
-  "bottom": "汤底内容",
+  "surface": "汤面内容（30字以内）",
+  "bottom": "汤底内容（50字以内）",
   "hints": ["提示1", "提示2", "提示3"],
   "keywords": ["关键词1", "关键词2", ...]
 }`;
 
     const prompt = `分类：${categoryName}
-提示词：${prompts.join('、')}
+${prompts.length > 0 ? `提示词：${prompts.join('、')}` : ''}
 
-请创作一个${categoryName}类型的海龟汤题目。`;
+请创作一个${categoryName}类型的海龟汤题目。
+记住：汤面30字以内，汤底50字以内！`;
 
     try {
       const result = await this.callAPI(prompt, systemPrompt);

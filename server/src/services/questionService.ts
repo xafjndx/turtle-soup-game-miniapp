@@ -214,6 +214,44 @@ class QuestionService {
       },
     });
   }
+
+  // 获取投稿排行榜
+  async getSubmitLeaderboard(limit: number = 10) {
+    // 统计每个用户的投稿数量（包括待审核和已通过）
+    const submissions = await prisma.question.groupBy({
+      by: ['submittedBy'],
+      where: {
+        submittedBy: { not: null },
+        status: { in: ['PENDING', 'APPROVED'] },
+      },
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _count: {
+          id: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    // 获取用户信息
+    const userIds = submissions.map(s => s.submittedBy).filter(Boolean) as string[];
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, nickname: true, username: true, avatarUrl: true },
+    });
+
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    return submissions.map((s, index) => ({
+      rank: index + 1,
+      userId: s.submittedBy,
+      nickname: userMap.get(s.submittedBy || '')?.nickname || userMap.get(s.submittedBy || '')?.username || '匿名用户',
+      avatarUrl: userMap.get(s.submittedBy || '')?.avatarUrl,
+      submitCount: s._count.id,
+    }));
+  }
 }
 
 export default new QuestionService();

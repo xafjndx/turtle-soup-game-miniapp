@@ -11,9 +11,6 @@
     <view class="surface-content">
       {{question.surface}}
     </view>
-    <view class="hint-info">
-      <text>💡 剩余提示：{{hintRemaining}}/3</text>
-    </view>
   </view>
 
   <!-- 输入区域 -->
@@ -56,7 +53,8 @@
     <!-- 操作按钮 -->
     <view class="action-btns">
       <button class="btn-hint" bindtap="onUseHint" disabled="{{hintRemaining <= 0}}">
-        💡 提示 ({{hintRemaining}})
+        <text class="btn-text">提示</text>
+        <text class="btn-num">({{hintRemaining}})</text>
       </button>
       <button class="btn-ask" bindtap="onSubmitAsk">提问</button>
       <button class="btn-guess" bindtap="onSubmitGuess">猜答案</button>
@@ -111,28 +109,30 @@
   <view class="result-modal" wx:if="{{showResultModal}}">
     <view class="modal-mask"></view>
     <view class="modal-content result-content">
-      <view class="result-icon">{{gameResult.result === 'WIN' ? '🎉' : '😮'}}</view>
-      <view class="result-title">{{gameResult.result === 'WIN' ? '恭喜猜中！' : '游戏结束'}}</view>
+      <view class="result-icon">🎉</view>
+      <view class="result-title">恭喜猜中！</view>
       <view class="result-hit-rate" wx:if="{{gameResult.hitRate}}">
         最终重合率：{{gameResult.hitRate}}%
       </view>
       
-      <!-- 汤底展示 -->
+      <!-- 汤底展示（只有点击查看汤底才显示） -->
       <view class="result-answer" wx:if="{{revealedAnswer && gameResult.answer}}">
         <view class="label">【汤底】</view>
         <view class="text">{{gameResult.answer}}</view>
       </view>
       
-      <!-- AI题目入库按钮（只有AI生成的题目才显示） -->
-      <view class="save-question-section" wx:if="{{session.questionSource === 'AI_GENERATED' && revealedAnswer}}">
+      <!-- AI题目入库按钮（只有AI生成的题目且已显示汤底才显示） -->
+      <view class="save-question-section" wx:if="{{session.questionSource === 'AI_GENERATED' && revealedAnswer && !savedToBank}}">
         <button class="btn-save-question" bindtap="onSaveQuestion">加入题库</button>
         <button class="btn-skip-save" bindtap="onSkipSave">跳过</button>
       </view>
       
-      <!-- 非AI题目或未显示汤底时，直接显示结束按钮 -->
-      <view class="modal-btns end-btns" wx:if="{{session.questionSource !== 'AI_GENERATED' || !revealedAnswer}}">
+      <!-- 操作按钮 -->
+      <view class="modal-btns result-btns">
+        <button class="btn-view-answer" bindtap="onViewAnswerFromResult" wx:if="{{!revealedAnswer}}">查看汤底</button>
+        <button class="btn-continue" bindtap="onContinueGame" wx:if="{{!revealedAnswer}}">继续游戏</button>
         <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
-        <button class="btn-home" bindtap="onBackHome">返回首页</button>
+        <button class="btn-home" bindtap="onBackHome">返回主界面</button>
       </view>
     </view>
   </view>
