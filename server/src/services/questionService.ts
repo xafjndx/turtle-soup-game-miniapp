@@ -13,7 +13,7 @@ export interface CreateQuestionData {
   hints: string[] | string;
   keywords: string[] | string;
   source?: QuestionSource;
-  submittedBy?: string;  // 投稿者用户ID
+  // submittedBy?: string;  // 暂时注释，等待数据库迁移
   aiGeneratedBy?: string;
   crawlSource?: string;
   crawlUrl?: string;
@@ -217,42 +217,11 @@ class QuestionService {
     });
   }
 
-  // 获取投稿排行榜
+  // 获取投稿排行榜（暂时返回空数组，等待 submittedBy 字段迁移）
   async getSubmitLeaderboard(limit: number = 10) {
-    // 统计每个用户的投稿数量（包括待审核和已通过）
-    const submissions = await prisma.question.groupBy({
-      by: ['submittedBy'],
-      where: {
-        submittedBy: { not: null },
-        status: { in: ['PENDING', 'APPROVED'] },
-      },
-      _count: {
-        id: true,
-      },
-      orderBy: {
-        _count: {
-          id: 'desc',
-        },
-      },
-      take: limit,
-    });
-
-    // 获取用户信息
-    const userIds = submissions.map(s => s.submittedBy).filter(Boolean) as string[];
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, nickname: true, username: true, avatarUrl: true },
-    });
-
-    const userMap = new Map(users.map(u => [u.id, u]));
-
-    return submissions.map((s, index) => ({
-      rank: index + 1,
-      userId: s.submittedBy,
-      nickname: userMap.get(s.submittedBy || '')?.nickname || userMap.get(s.submittedBy || '')?.username || '匿名用户',
-      avatarUrl: userMap.get(s.submittedBy || '')?.avatarUrl,
-      submitCount: s._count.id,
-    }));
+    // TODO: 等待数据库添加 submittedBy 字段后启用
+    // 暂时返回空数组
+    return [];
   }
 }
 
