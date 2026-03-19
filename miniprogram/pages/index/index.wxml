@@ -66,16 +66,4 @@
     </button>
   </view>
 
-  <!-- 投稿入口 -->
-  <view class="submit-section" bindtap="onSubmitQuestion">
-    <view class="submit-card">
-      <text class="submit-icon">✍️</text>
-      <view class="submit-info">
-        <text class="submit-title">投稿题目</text>
-        <text class="submit-desc">分享你的创意，一起丰富题库</text>
-      </view>
-      <text class="submit-arrow">></text>
-    </view>
-  </view>
-
-  </view>
+</view>

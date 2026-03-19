@@ -9,18 +9,30 @@ interface User {
   nickname?: string;
   avatarUrl?: string;
   totalGames: number;
+  winCount: number;
   hitRate: number;
+  createdAt?: string;
 }
 
 interface Question {
   id: string;
+  title?: string;
   surface: string;
   bottom: string;
   category: string;
+  categoryName: string;
   status: string;
+  statusName: string;
+  surfaceShort: string;
   hints: string;
   keywords: string;
   source: string;
+  submittedBy?: string;
+  submitterName?: string;
+  createdAt?: string;
+  timeShort?: string;
+  hintsText?: string;
+  keywordsText?: string;
 }
 
 Page({
@@ -34,20 +46,28 @@ Page({
     currentTab: 'overview',
 
     // 统计数据
-    stats: {} as any,
+    stats: {
+      users: { total: 0, active: 0 },
+      questions: { total: 0, pending: 0, softDeleted: 0 },
+      games: { total: 0, today: 0, winRate: '0%' },
+    } as any,
+    categoryCounts: {} as Record<string, number>,
 
     // 用户管理
     users: [] as User[],
     filteredUsers: [] as User[],
     userSearch: '',
-    showUserModal: false,
-    editUser: {} as any,
+    showUserDetailModal: false,
+    userDetail: {} as any,
 
     // 题库管理
     questions: [] as Question[],
     filteredQuestions: [] as Question[],
     questionSearch: '',
+    selectedCategory: '',
     showQuestionModal: false,
+    showQuestionDetailModal: false,
+    questionDetail: {} as any,
     editQuestion: {} as any,
     categoryIndex: 0,
     categories: [
@@ -59,21 +79,26 @@ Page({
 
     // 待审核
     pendingQuestions: [] as Question[],
+    showPendingDetailModal: false,
+    pendingDetail: {} as any,
   },
 
   onLoad() {
-    // 检查是否已登录（使用 storage 缓存）
-    const loggedIn = wx.getStorageSync('admin_logged_in');
-    if (loggedIn) {
-      this.setData({ isLoggedIn: true });
-      this.loadData();
-    }
+    // 每次进入都需要重新登录
+    this.setData({ isLoggedIn: false });
   },
 
   onShow() {
-    if (this.data.isLoggedIn) {
-      this.loadData();
+    // 离开后返回需要重新登录
+    if (!this.data.isLoggedIn) {
+      this.setData({ password: '', loginError: '' });
     }
+  },
+
+  onHide() {
+    // 离开管理界面时清除登录状态
+    wx.removeStorageSync('admin_logged_in');
+    this.setData({ isLoggedIn: false, password: '' });
   },
 
   // 密码输入
@@ -104,25 +129,53 @@ Page({
   async loadData() {
     try {
       const statsData = await getAdminStatistics();
-      // 确保 stats 结构完整，避免 WXML 中访问 undefined
       const stats = {
         users: { total: 0, active: 0, ...statsData.users },
         questions: { total: 0, pending: 0, softDeleted: 0, ...statsData.questions },
         games: { total: 0, today: 0, winRate: '0%', ...statsData.games },
       };
       const pendingQuestions = await getPendingQuestions(50);
-      this.setData({ stats, pendingQuestions });
+      
+      // 处理待审核数据
+      const processedPending = this.processPendingQuestions(pendingQuestions);
+      
+      this.setData({ stats, pendingQuestions: processedPending, categoryCounts: statsData.questions.byCategory || {} });
     } catch (err) {
       console.error('加载数据失败:', err);
-      // 设置默认值
-      this.setData({ 
-        stats: {
-          users: { total: 0, active: 0 },
-          questions: { total: 0, pending: 0, softDeleted: 0 },
-          games: { total: 0, today: 0, winRate: '0%' },
-        }
-      });
     }
+  },
+
+  // 处理待审核数据
+  processPendingQuestions(list: any[]): Question[] {
+    return list.map(item => ({
+      ...item,
+      title: item.title || '无标题',
+      submitterName: item.submittedBy || '匿名',
+      timeShort: item.createdAt ? item.createdAt.substring(0, 10) : '',
+      categoryName: this.getCategoryName(item.category),
+    }));
+  },
+
+  // 获取分类名称
+  getCategoryName(category: string): string {
+    const map: Record<string, string> = {
+      'CLASSIC': '经典推理',
+      'HORROR': '恐怖悬疑',
+      'LOGIC': '逻辑陷阱',
+      'WARM': '温情反转',
+    };
+    return map[category] || category;
+  },
+
+  // 获取状态名称
+  getStatusName(status: string): string {
+    const map: Record<string, string> = {
+      'APPROVED': '已通过',
+      'PENDING': '待审核',
+      'REJECTED': '已驳回',
+      'SOFT_DELETED': '已删除',
+    };
+    return map[status] || status;
   },
 
   // 加载用户列表
@@ -134,7 +187,7 @@ Page({
         header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
       });
       // @ts-ignore
-      const users = res.data?.data || [];
+      const users = res.data?.data?.list || res.data?.data || [];
       this.setData({ users, filteredUsers: users });
     } catch (err) {
       console.error('加载用户失败:', err);
@@ -150,7 +203,16 @@ Page({
         header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
       });
       // @ts-ignore
-      const questions = res.data?.data?.list || [];
+      const rawQuestions = res.data?.data?.list || [];
+      
+      // 处理题目数据
+      const questions: Question[] = rawQuestions.map((item: any) => ({
+        ...item,
+        categoryName: this.getCategoryName(item.category),
+        statusName: this.getStatusName(item.status),
+        surfaceShort: item.surface.length > 20 ? item.surface.substring(0, 20) + '...' : item.surface,
+      }));
+      
       this.setData({ questions, filteredQuestions: questions });
     } catch (err) {
       console.error('加载题目失败:', err);
@@ -169,42 +231,55 @@ Page({
   // 搜索题目
   onSearchQuestion(e: any) {
     const keyword = e.detail.value.toLowerCase();
-    const filteredQuestions = this.data.questions.filter(q => 
+    let filteredQuestions = this.data.questions.filter(q => 
       q.surface.toLowerCase().includes(keyword) || q.bottom.toLowerCase().includes(keyword)
     );
+    
+    // 如果选中了分类，再过滤
+    if (this.data.selectedCategory) {
+      filteredQuestions = filteredQuestions.filter(q => q.category === this.data.selectedCategory);
+    }
+    
     this.setData({ questionSearch: keyword, filteredQuestions });
   },
 
-  // 编辑用户
-  onEditUser(e: any) {
+  // 选择分类过滤
+  onSelectCategoryFilter(e: any) {
+    const category = e.currentTarget.dataset.category;
+    this.setData({ selectedCategory: category });
+    
+    let filteredQuestions = this.data.questions;
+    if (category) {
+      filteredQuestions = filteredQuestions.filter(q => q.category === category);
+    }
+    
+    // 如果有搜索关键词，也要应用
+    if (this.data.questionSearch) {
+      const keyword = this.data.questionSearch.toLowerCase();
+      filteredQuestions = filteredQuestions.filter(q => 
+        q.surface.toLowerCase().includes(keyword) || q.bottom.toLowerCase().includes(keyword)
+      );
+    }
+    
+    this.setData({ filteredQuestions });
+  },
+
+  // 查看用户详情
+  onViewUserDetail(e: any) {
     const user = this.data.users.find(u => u.id === e.currentTarget.dataset.id);
     if (user) {
-      this.setData({ showUserModal: true, editUser: { ...user } });
-    }
-  },
-
-  onInputUserNickname(e: any) {
-    this.setData({ 'editUser.nickname': e.detail.value });
-  },
-
-  closeUserModal() {
-    this.setData({ showUserModal: false, editUser: {} });
-  },
-
-  async onSaveUser() {
-    try {
-      await wx.request({
-        url: `https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/user/${this.data.editUser.id}`,
-        method: 'PUT',
-        header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
-        data: { nickname: this.data.editUser.nickname },
+      this.setData({ 
+        showUserDetailModal: true, 
+        userDetail: {
+          ...user,
+          createdAt: user.createdAt ? user.createdAt.substring(0, 10) : '未知'
+        }
       });
-      wx.showToast({ title: '保存成功', icon: 'success' });
-      this.closeUserModal();
-      this.loadUsers();
-    } catch (err) {
-      wx.showToast({ title: '保存失败', icon: 'none' });
     }
+  },
+
+  closeUserDetailModal() {
+    this.setData({ showUserDetailModal: false, userDetail: {} });
   },
 
   async onDeleteUser(e: any) {
@@ -244,6 +319,47 @@ Page({
     });
   },
 
+  // 查看题目详情
+  onViewQuestion(e: any) {
+    const q = this.data.questions.find(q => q.id === e.currentTarget.dataset.id);
+    if (q) {
+      const hints = typeof q.hints === 'string' ? JSON.parse(q.hints) : q.hints;
+      const keywords = typeof q.keywords === 'string' ? JSON.parse(q.keywords) : q.keywords;
+      this.setData({
+        showQuestionDetailModal: true,
+        questionDetail: {
+          ...q,
+          hintsText: Array.isArray(hints) ? hints.join(' | ') : hints,
+          keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
+        }
+      });
+    }
+  },
+
+  closeQuestionDetailModal() {
+    this.setData({ showQuestionDetailModal: false, questionDetail: {} });
+  },
+
+  editFromDetail() {
+    const q = this.data.questionDetail;
+    const categoryIndex = this.data.categories.findIndex(c => c.value === q.category);
+    this.setData({
+      showQuestionDetailModal: false,
+      showQuestionModal: true,
+      editQuestion: {
+        id: q.id,
+        category: q.category,
+        surface: q.surface,
+        bottom: q.bottom,
+        hintsText: q.hintsText,
+        keywordsText: q.keywordsText,
+        surfaceLength: q.surface.length,
+        bottomLength: q.bottom.length,
+      },
+      categoryIndex: categoryIndex >= 0 ? categoryIndex : 0,
+    });
+  },
+
   // 编辑题目
   onEditQuestion(e: any) {
     const q = this.data.questions.find(q => q.id === e.currentTarget.dataset.id);
@@ -268,7 +384,80 @@ Page({
     }
   },
 
-  // 编辑待审核题目
+  async onDeleteQuestion(e: any) {
+    const res = await wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这个题目吗？',
+    });
+    if (res.confirm) {
+      try {
+        await wx.request({
+          url: `https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/question/${e.currentTarget.dataset.id}`,
+          method: 'DELETE',
+          header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
+        });
+        wx.showToast({ title: '已删除', icon: 'success' });
+        this.loadQuestions();
+      } catch (err) {
+        wx.showToast({ title: '删除失败', icon: 'none' });
+      }
+    }
+  },
+
+  // 查看待审核详情
+  onViewPendingDetail(e: any) {
+    const q = this.data.pendingQuestions.find(q => q.id === e.currentTarget.dataset.id);
+    if (q) {
+      const hints = typeof q.hints === 'string' ? JSON.parse(q.hints) : q.hints;
+      const keywords = typeof q.keywords === 'string' ? JSON.parse(q.keywords) : q.keywords;
+      this.setData({
+        showPendingDetailModal: true,
+        pendingDetail: {
+          ...q,
+          hintsText: Array.isArray(hints) ? hints.join(' | ') : hints,
+          keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
+        }
+      });
+    }
+  },
+
+  closePendingDetailModal() {
+    this.setData({ showPendingDetailModal: false, pendingDetail: {} });
+  },
+
+  // 从详情弹窗操作
+  rejectPending() {
+    this.setData({ showPendingDetailModal: false });
+    this.onRejectQuestion({ currentTarget: { dataset: { id: this.data.pendingDetail.id } } });
+  },
+
+  editPendingFromDetail() {
+    const q = this.data.pendingDetail;
+    const categoryIndex = this.data.categories.findIndex(c => c.value === q.category);
+    this.setData({
+      showPendingDetailModal: false,
+      showQuestionModal: true,
+      editQuestion: {
+        id: q.id,
+        category: q.category,
+        surface: q.surface,
+        bottom: q.bottom,
+        hintsText: q.hintsText,
+        keywordsText: q.keywordsText,
+        surfaceLength: q.surface.length,
+        bottomLength: q.bottom.length,
+        isPending: true,
+      },
+      categoryIndex: categoryIndex >= 0 ? categoryIndex : 0,
+    });
+  },
+
+  approvePending() {
+    this.setData({ showPendingDetailModal: false });
+    this.onApproveQuestion({ currentTarget: { dataset: { id: this.data.pendingDetail.id } } });
+  },
+
+  // 编辑待审核
   onEditPending(e: any) {
     const q = this.data.pendingQuestions.find(q => q.id === e.currentTarget.dataset.id);
     if (q) {
@@ -331,11 +520,11 @@ Page({
 
   async onSaveQuestion() {
     const { editQuestion } = this.data;
-    if (!editQuestion.surface?.trim()) {
+    if (!editQuestion.surface || !editQuestion.surface.trim()) {
       wx.showToast({ title: '请输入汤面', icon: 'none' });
       return;
     }
-    if (!editQuestion.bottom?.trim()) {
+    if (!editQuestion.bottom || !editQuestion.bottom.trim()) {
       wx.showToast({ title: '请输入汤底', icon: 'none' });
       return;
     }
@@ -356,6 +545,7 @@ Page({
             bottom: editQuestion.bottom,
             hints,
             keywords,
+            status: editQuestion.isPending ? 'APPROVED' : undefined,
           },
         });
       } else {
@@ -385,39 +575,6 @@ Page({
     }
   },
 
-  onViewQuestion(e: any) {
-    const q = this.data.questions.find(q => q.id === e.currentTarget.dataset.id);
-    if (q) {
-      const hints = typeof q.hints === 'string' ? JSON.parse(q.hints) : q.hints;
-      const keywords = typeof q.keywords === 'string' ? JSON.parse(q.keywords) : q.keywords;
-      wx.showModal({
-        title: '题目详情',
-        content: `汤面：${q.surface}\n\n汤底：${q.bottom}\n\n提示：${Array.isArray(hints) ? hints.join(' | ') : hints}\n\n关键词：${Array.isArray(keywords) ? keywords.join(', ') : keywords}`,
-        showCancel: false,
-      });
-    }
-  },
-
-  async onDeleteQuestion(e: any) {
-    const res = await wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这个题目吗？',
-    });
-    if (res.confirm) {
-      try {
-        await wx.request({
-          url: `https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/question/${e.currentTarget.dataset.id}`,
-          method: 'DELETE',
-          header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
-        });
-        wx.showToast({ title: '已删除', icon: 'success' });
-        this.loadQuestions();
-      } catch (err) {
-        wx.showToast({ title: '删除失败', icon: 'none' });
-      }
-    }
-  },
-
   // 审核通过
   async onApproveQuestion(e: any) {
     try {
@@ -433,7 +590,7 @@ Page({
   async onRejectQuestion(e: any) {
     try {
       await updateQuestionStatus(e.currentTarget.dataset.id, 'REJECTED');
-      wx.showToast({ title: '已拒绝', icon: 'success' });
+      wx.showToast({ title: '已驳回', icon: 'success' });
       this.loadData();
     } catch (err: any) {
       wx.showToast({ title: err.message || '操作失败', icon: 'none' });

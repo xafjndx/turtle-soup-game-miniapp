@@ -81,6 +81,10 @@ Page({
     }
 
     // 验证必填字段
+    if (!title.trim()) {
+      wx.showToast({ title: '请输入题目标题', icon: 'none' });
+      return;
+    }
     if (!surface.trim()) {
       wx.showToast({ title: '请输入汤面', icon: 'none' });
       return;

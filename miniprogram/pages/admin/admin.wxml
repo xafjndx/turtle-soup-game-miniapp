@@ -31,27 +31,27 @@
     <view class="tab-content" wx:if="{{currentTab === 'overview'}}">
       <view class="stats-grid">
         <view class="stat-card">
-          <text class="stat-value">{{stats.users.total || 0}}</text>
+          <text class="stat-value">{{stats.users.total}}</text>
           <text class="stat-label">总用户</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.questions.total || 0}}</text>
+          <text class="stat-value">{{stats.questions.total}}</text>
           <text class="stat-label">题目总数</text>
         </view>
         <view class="stat-card highlight">
-          <text class="stat-value">{{stats.questions.pending || 0}}</text>
+          <text class="stat-value">{{stats.questions.pending}}</text>
           <text class="stat-label">待审核</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games.total || 0}}</text>
+          <text class="stat-value">{{stats.games.total}}</text>
           <text class="stat-label">游戏总数</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games.winRate || '0%'}}</text>
+          <text class="stat-value">{{stats.games.winRate}}</text>
           <text class="stat-label">胜率</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games.today || 0}}</text>
+          <text class="stat-value">{{stats.games.today}}</text>
           <text class="stat-label">今日游戏</text>
         </view>
       </view>
@@ -62,18 +62,22 @@
       <view class="search-bar">
         <input class="search-input" placeholder="搜索用户..." value="{{userSearch}}" bindinput="onSearchUser" />
       </view>
-      <view class="user-list">
-        <view class="user-card" wx:for="{{filteredUsers}}" wx:key="id">
-          <view class="user-info">
-            <image class="user-avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
-            <view class="user-detail">
-              <text class="user-name">{{item.nickname || item.username}}</text>
-              <text class="user-stats">{{item.totalGames}}局 · {{item.hitRate}}%命中</text>
+      <view class="table-container">
+        <view class="table-header">
+          <text class="th th-name">用户名</text>
+          <text class="th th-games">游戏</text>
+          <text class="th th-rate">命中率</text>
+          <text class="th th-action">操作</text>
+        </view>
+        <view class="table-body">
+          <view class="table-row" wx:for="{{filteredUsers}}" wx:key="id">
+            <text class="td td-name">{{item.nickname || item.username}}</text>
+            <text class="td td-games">{{item.totalGames}}</text>
+            <text class="td td-rate">{{item.hitRate}}%</text>
+            <view class="td td-action">
+              <text class="action-link" data-id="{{item.id}}" bindtap="onViewUserDetail">详情</text>
+              <text class="action-link delete" data-id="{{item.id}}" bindtap="onDeleteUser">删除</text>
             </view>
-          </view>
-          <view class="user-actions">
-            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditUser">编辑</button>
-            <button class="btn-delete" data-id="{{item.id}}" bindtap="onDeleteUser">删除</button>
           </view>
         </view>
       </view>
@@ -81,24 +85,52 @@
 
     <!-- 题库管理 -->
     <view class="tab-content" wx:if="{{currentTab === 'questions'}}">
+      <!-- 分类统计 -->
+      <view class="category-stats">
+        <view class="category-card {{selectedCategory === '' ? 'active' : ''}}" bindtap="onSelectCategoryFilter" data-category="">
+          <text class="category-name">全部</text>
+          <text class="category-count">{{stats.questions.total}}</text>
+        </view>
+        <view class="category-card {{selectedCategory === 'CLASSIC' ? 'active' : ''}}" bindtap="onSelectCategoryFilter" data-category="CLASSIC">
+          <text class="category-name">经典推理</text>
+          <text class="category-count">{{categoryCounts.CLASSIC || 0}}</text>
+        </view>
+        <view class="category-card {{selectedCategory === 'HORROR' ? 'active' : ''}}" bindtap="onSelectCategoryFilter" data-category="HORROR">
+          <text class="category-name">恐怖悬疑</text>
+          <text class="category-count">{{categoryCounts.HORROR || 0}}</text>
+        </view>
+        <view class="category-card {{selectedCategory === 'LOGIC' ? 'active' : ''}}" bindtap="onSelectCategoryFilter" data-category="LOGIC">
+          <text class="category-name">逻辑陷阱</text>
+          <text class="category-count">{{categoryCounts.LOGIC || 0}}</text>
+        </view>
+        <view class="category-card {{selectedCategory === 'WARM' ? 'active' : ''}}" bindtap="onSelectCategoryFilter" data-category="WARM">
+          <text class="category-name">温情反转</text>
+          <text class="category-count">{{categoryCounts.WARM || 0}}</text>
+        </view>
+      </view>
+      
       <view class="search-bar">
         <input class="search-input" placeholder="搜索题目..." value="{{questionSearch}}" bindinput="onSearchQuestion" />
         <button class="btn-add" bindtap="onAddQuestion">+ 新增</button>
       </view>
-      <view class="question-list">
-        <view class="question-card" wx:for="{{filteredQuestions}}" wx:key="id">
-          <view class="question-header">
-            <text class="question-category">{{item.category}}</text>
-            <text class="question-status status-{{item.status}}">{{item.status}}</text>
-          </view>
-          <view class="question-body">
-            <text class="question-label">汤面：</text>
-            <text class="question-text">{{item.surface}}</text>
-          </view>
-          <view class="question-actions">
-            <button class="btn-view" data-id="{{item.id}}" bindtap="onViewQuestion">详情</button>
-            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditQuestion">编辑</button>
-            <button class="btn-delete" data-id="{{item.id}}" bindtap="onDeleteQuestion">删除</button>
+      
+      <view class="table-container">
+        <view class="table-header">
+          <text class="th th-category">分类</text>
+          <text class="th th-surface">汤面</text>
+          <text class="th th-status">状态</text>
+          <text class="th th-action">操作</text>
+        </view>
+        <view class="table-body">
+          <view class="table-row" wx:for="{{filteredQuestions}}" wx:key="id">
+            <text class="td td-category">{{item.categoryName}}</text>
+            <text class="td td-surface">{{item.surfaceShort}}</text>
+            <text class="td td-status status-{{item.status}}">{{item.statusName}}</text>
+            <view class="td td-action">
+              <text class="action-link" data-id="{{item.id}}" bindtap="onViewQuestion">详情</text>
+              <text class="action-link" data-id="{{item.id}}" bindtap="onEditQuestion">编辑</text>
+              <text class="action-link delete" data-id="{{item.id}}" bindtap="onDeleteQuestion">删除</text>
+            </view>
           </view>
         </view>
       </view>
@@ -110,30 +142,23 @@
         <text class="empty-icon">🎉</text>
         <text class="empty-text">暂无待审核题目</text>
       </view>
-      <view class="question-list" wx:else>
-        <view class="question-card pending" wx:for="{{pendingQuestions}}" wx:key="id">
-          <view class="question-header">
-            <text class="question-source">{{item.source === 'AI_GENERATED' ? 'AI生成' : '用户投稿'}}</text>
-            <text class="question-category">{{item.category}}</text>
-          </view>
-          <view class="question-body">
-            <view class="question-row">
-              <text class="question-label">汤面：</text>
-              <text class="question-text">{{item.surface}}</text>
+      <view class="table-container" wx:else>
+        <view class="table-header">
+          <text class="th th-title">标题</text>
+          <text class="th th-user">投稿者</text>
+          <text class="th th-time">时间</text>
+          <text class="th th-action">操作</text>
+        </view>
+        <view class="table-body">
+          <view class="table-row" wx:for="{{pendingQuestions}}" wx:key="id" data-id="{{item.id}}" bindtap="onViewPendingDetail">
+            <text class="td td-title">{{item.title || '无标题'}}</text>
+            <text class="td td-user">{{item.submitterName || '匿名'}}</text>
+            <text class="td td-time">{{item.timeShort}}</text>
+            <view class="td td-action" catchtap="stopPropagation">
+              <text class="action-link" data-id="{{item.id}}" catchtap="onApproveQuestion">通过</text>
+              <text class="action-link" data-id="{{item.id}}" catchtap="onEditPending">编辑</text>
+              <text class="action-link delete" data-id="{{item.id}}" catchtap="onRejectQuestion">驳回</text>
             </view>
-            <view class="question-row">
-              <text class="question-label">汤底：</text>
-              <text class="question-text">{{item.bottom}}</text>
-            </view>
-            <view class="question-row">
-              <text class="question-label">提示：</text>
-              <text class="question-text">{{item.hints}}</text>
-            </view>
-          </view>
-          <view class="question-actions">
-            <button class="btn-reject" data-id="{{item.id}}" bindtap="onRejectQuestion">拒绝</button>
-            <button class="btn-edit" data-id="{{item.id}}" bindtap="onEditPending">修改</button>
-            <button class="btn-approve" data-id="{{item.id}}" bindtap="onApproveQuestion">通过</button>
           </view>
         </view>
       </view>
@@ -141,19 +166,113 @@
   </block>
 </view>
 
-<!-- 编辑用户弹窗 -->
-<view class="modal-mask" wx:if="{{showUserModal}}" bindtap="closeUserModal">
+<!-- 用户详情弹窗 -->
+<view class="modal-mask" wx:if="{{showUserDetailModal}}" bindtap="closeUserDetailModal">
   <view class="modal-content" catchtap="stopPropagation">
-    <view class="modal-title">编辑用户</view>
-    <view class="modal-form">
-      <view class="form-item">
-        <text class="form-label">昵称</text>
-        <input class="form-input" value="{{editUser.nickname}}" bindinput="onInputUserNickname" />
+    <view class="modal-title">用户详情</view>
+    <view class="modal-body">
+      <view class="detail-row">
+        <text class="detail-label">用户名：</text>
+        <text class="detail-value">{{userDetail.username}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">昵称：</text>
+        <text class="detail-value">{{userDetail.nickname || '未设置'}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">游戏总数：</text>
+        <text class="detail-value">{{userDetail.totalGames}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">胜场：</text>
+        <text class="detail-value">{{userDetail.winCount}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">命中率：</text>
+        <text class="detail-value">{{userDetail.hitRate}}%</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">注册时间：</text>
+        <text class="detail-value">{{userDetail.createdAt}}</text>
       </view>
     </view>
     <view class="modal-actions">
-      <button class="btn-cancel" bindtap="closeUserModal">取消</button>
-      <button class="btn-save" bindtap="onSaveUser">保存</button>
+      <button class="btn-cancel" bindtap="closeUserDetailModal">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- 题目详情弹窗 -->
+<view class="modal-mask" wx:if="{{showQuestionDetailModal}}" bindtap="closeQuestionDetailModal">
+  <view class="modal-content question-detail-modal" catchtap="stopPropagation">
+    <view class="modal-title">题目详情</view>
+    <scroll-view scroll-y class="modal-body">
+      <view class="detail-row">
+        <text class="detail-label">分类：</text>
+        <text class="detail-value">{{questionDetail.categoryName}}</text>
+      </view>
+      <view class="detail-section">
+        <text class="detail-label">汤面：</text>
+        <text class="detail-value">{{questionDetail.surface}}</text>
+      </view>
+      <view class="detail-section">
+        <text class="detail-label">汤底：</text>
+        <text class="detail-value">{{questionDetail.bottom}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">提示：</text>
+        <text class="detail-value">{{questionDetail.hintsText}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">关键词：</text>
+        <text class="detail-value">{{questionDetail.keywordsText}}</text>
+      </view>
+    </scroll-view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeQuestionDetailModal">关闭</button>
+      <button class="btn-edit" bindtap="editFromDetail">编辑</button>
+    </view>
+  </view>
+</view>
+
+<!-- 待审核详情弹窗 -->
+<view class="modal-mask" wx:if="{{showPendingDetailModal}}" bindtap="closePendingDetailModal">
+  <view class="modal-content question-detail-modal" catchtap="stopPropagation">
+    <view class="modal-title">投稿详情</view>
+    <scroll-view scroll-y class="modal-body">
+      <view class="detail-row">
+        <text class="detail-label">标题：</text>
+        <text class="detail-value">{{pendingDetail.title || '无标题'}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">投稿者：</text>
+        <text class="detail-value">{{pendingDetail.submitterName || '匿名'}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">分类：</text>
+        <text class="detail-value">{{pendingDetail.categoryName}}</text>
+      </view>
+      <view class="detail-section">
+        <text class="detail-label">汤面：</text>
+        <text class="detail-value">{{pendingDetail.surface}}</text>
+      </view>
+      <view class="detail-section">
+        <text class="detail-label">汤底：</text>
+        <text class="detail-value">{{pendingDetail.bottom}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">提示：</text>
+        <text class="detail-value">{{pendingDetail.hintsText}}</text>
+      </view>
+      <view class="detail-row">
+        <text class="detail-label">关键词：</text>
+        <text class="detail-value">{{pendingDetail.keywordsText}}</text>
+      </view>
+    </scroll-view>
+    <view class="modal-actions pending-actions">
+      <button class="btn-reject" bindtap="rejectPending">驳回</button>
+      <button class="btn-edit" bindtap="editPendingFromDetail">编辑</button>
+      <button class="btn-approve" bindtap="approvePending">通过</button>
     </view>
   </view>
 </view>

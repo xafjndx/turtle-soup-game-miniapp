@@ -105,12 +105,13 @@
     </view>
   </view>
 
-  <!-- 汤底展示弹窗（含加入题库按钮） -->
+  <!-- 猜中结果弹窗 -->
   <view class="result-modal" wx:if="{{showResultModal}}">
     <view class="modal-mask"></view>
     <view class="modal-content result-content">
-      <view class="result-icon">🎉</view>
-      <view class="result-title">恭喜猜中！</view>
+      <!-- 根据是否查看汤底显示不同图标 -->
+      <view class="result-icon">{{revealedAnswer ? '💪' : '🎉'}}</view>
+      <view class="result-title">{{revealedAnswer ? '继续加油！' : '恭喜猜中！'}}</view>
       <view class="result-hit-rate" wx:if="{{gameResult.hitRate}}">
         最终重合率：{{gameResult.hitRate}}%
       </view>
@@ -121,7 +122,7 @@
         <view class="text">{{gameResult.answer}}</view>
       </view>
       
-      <!-- AI题目入库按钮（只有AI生成的题目且已显示汤底才显示） -->
+      <!-- AI题目入库按钮（只有AI生成的题目且已显示汤底且未保存才显示） -->
       <view class="save-question-section" wx:if="{{session.questionSource === 'AI_GENERATED' && revealedAnswer && !savedToBank}}">
         <button class="btn-save-question" bindtap="onSaveQuestion">加入题库</button>
         <button class="btn-skip-save" bindtap="onSkipSave">跳过</button>
@@ -129,10 +130,14 @@
       
       <!-- 操作按钮 -->
       <view class="modal-btns result-btns">
+        <!-- 未查看汤底时 -->
         <button class="btn-view-answer" bindtap="onViewAnswerFromResult" wx:if="{{!revealedAnswer}}">查看汤底</button>
         <button class="btn-continue" bindtap="onContinueGame" wx:if="{{!revealedAnswer}}">继续游戏</button>
-        <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
-        <button class="btn-home" bindtap="onBackHome">返回主界面</button>
+        <!-- 已查看汤底且（非AI题目 或 已处理题库选项）时显示 -->
+        <block wx:if="{{revealedAnswer && (session.questionSource !== 'AI_GENERATED' || savedToBank)}}">
+          <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
+          <button class="btn-home" bindtap="onBackHome">返回主界面</button>
+        </block>
       </view>
     </view>
   </view>
@@ -141,7 +146,8 @@
   <view class="end-choice-modal" wx:if="{{showEndChoice}}">
     <view class="modal-mask"></view>
     <view class="modal-content">
-      <view class="modal-title">游戏结束</view>
+      <view class="result-icon">💪</view>
+      <view class="result-title">继续加油！</view>
       <view class="modal-btns">
         <button class="btn-again" bindtap="onPlayAgain">再来一局</button>
         <button class="btn-home" bindtap="onBackHome">返回首页</button>
