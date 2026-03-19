@@ -1,7 +1,7 @@
 // api/index.ts
 // API 接口定义
 
-import { get, post } from '../utils/request';
+import { get, post, put, del } from '../utils/request';
 
 // ==================== 用户相关 ====================
 

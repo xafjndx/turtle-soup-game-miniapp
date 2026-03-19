@@ -81,7 +81,7 @@ Page({
             const data = await exportUserData();
             wx.hideLoading();
             
-            // 格式化数据
+            // 格式化数据 - 不显示具体题目内容
             const text = `
 ========== 海龟汤游戏 - 个人数据导出 ==========
 导出时间：${data.exportTime}
@@ -95,21 +95,17 @@ Page({
 命中率：${data.user.hitRate}%
 总游戏时长：${data.user.totalPlayTime} 分钟
 
-【游戏记录】（共 ${data.gameHistory.length} 条）
-${data.gameHistory.map((h: any, i: number) => `
-${i + 1}. ${h.result === 'WIN' ? '✓ 胜利' : '✗ 失败'}
-   题目：${h.question}
-   分类：${h.category}
-   时间：${h.playedAt}
-   用时：${h.playTime}分钟 | 提示：${h.hintUsed}次
-`).join('')}
+【游戏统计】
+胜利场次：${data.user.winCount} 场
+失败场次：${data.user.totalGames - data.user.winCount} 场
+平均用时：${data.user.avgPlayTime} 分钟
 ========== 数据导出完成 ==========
             `.trim();
 
             // 显示数据
             wx.showModal({
               title: '数据已导出',
-              content: text.slice(0, 500) + (text.length > 500 ? '...(数据过长，请复制保存)' : ''),
+              content: text,
               confirmText: '复制全部',
               success: (r) => {
                 if (r.confirm) {
