@@ -103,11 +103,25 @@ Page({
   // 加载所有数据
   async loadData() {
     try {
-      const stats = await getAdminStatistics();
+      const statsData = await getAdminStatistics();
+      // 确保 stats 结构完整，避免 WXML 中访问 undefined
+      const stats = {
+        users: { total: 0, active: 0, ...statsData.users },
+        questions: { total: 0, pending: 0, softDeleted: 0, ...statsData.questions },
+        games: { total: 0, today: 0, winRate: '0%', ...statsData.games },
+      };
       const pendingQuestions = await getPendingQuestions(50);
       this.setData({ stats, pendingQuestions });
     } catch (err) {
       console.error('加载数据失败:', err);
+      // 设置默认值
+      this.setData({ 
+        stats: {
+          users: { total: 0, active: 0 },
+          questions: { total: 0, pending: 0, softDeleted: 0 },
+          games: { total: 0, today: 0, winRate: '0%' },
+        }
+      });
     }
   },
 
@@ -223,6 +237,8 @@ Page({
         bottom: '',
         hintsText: '',
         keywordsText: '',
+        surfaceLength: 0,
+        bottomLength: 0,
       },
       categoryIndex: 0,
     });
@@ -244,6 +260,8 @@ Page({
           bottom: q.bottom,
           hintsText: Array.isArray(hints) ? hints.join('\n') : hints,
           keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
+          surfaceLength: q.surface.length,
+          bottomLength: q.bottom.length,
         },
         categoryIndex: categoryIndex >= 0 ? categoryIndex : 0,
       });
@@ -266,6 +284,8 @@ Page({
           bottom: q.bottom,
           hintsText: Array.isArray(hints) ? hints.join('\n') : hints,
           keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
+          surfaceLength: q.surface.length,
+          bottomLength: q.bottom.length,
           isPending: true,
         },
         categoryIndex: categoryIndex >= 0 ? categoryIndex : 0,
@@ -282,11 +302,17 @@ Page({
   },
 
   onInputSurface(e: any) {
-    this.setData({ 'editQuestion.surface': e.detail.value });
+    this.setData({ 
+      'editQuestion.surface': e.detail.value,
+      'editQuestion.surfaceLength': e.detail.value.length
+    });
   },
 
   onInputBottom(e: any) {
-    this.setData({ 'editQuestion.bottom': e.detail.value });
+    this.setData({ 
+      'editQuestion.bottom': e.detail.value,
+      'editQuestion.bottomLength': e.detail.value.length
+    });
   },
 
   onInputHints(e: any) {

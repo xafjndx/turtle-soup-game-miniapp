@@ -31,27 +31,27 @@
     <view class="tab-content" wx:if="{{currentTab === 'overview'}}">
       <view class="stats-grid">
         <view class="stat-card">
-          <text class="stat-value">{{stats.users?.total || 0}}</text>
+          <text class="stat-value">{{stats.users.total || 0}}</text>
           <text class="stat-label">总用户</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.questions?.total || 0}}</text>
+          <text class="stat-value">{{stats.questions.total || 0}}</text>
           <text class="stat-label">题目总数</text>
         </view>
         <view class="stat-card highlight">
-          <text class="stat-value">{{stats.questions?.pending || 0}}</text>
+          <text class="stat-value">{{stats.questions.pending || 0}}</text>
           <text class="stat-label">待审核</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games?.total || 0}}</text>
+          <text class="stat-value">{{stats.games.total || 0}}</text>
           <text class="stat-label">游戏总数</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games?.winRate || '0%'}}</text>
+          <text class="stat-value">{{stats.games.winRate || '0%'}}</text>
           <text class="stat-label">胜率</text>
         </view>
         <view class="stat-card">
-          <text class="stat-value">{{stats.games?.today || 0}}</text>
+          <text class="stat-value">{{stats.games.today || 0}}</text>
           <text class="stat-label">今日游戏</text>
         </view>
       </view>
@@ -172,12 +172,12 @@
       <view class="form-item">
         <text class="form-label">汤面 *</text>
         <textarea class="form-textarea" value="{{editQuestion.surface}}" bindinput="onInputSurface" placeholder="50-100字，简洁有趣" maxlength="150" />
-        <text class="char-count">{{editQuestion.surface?.length || 0}}/150</text>
+        <text class="char-count">{{editQuestion.surfaceLength}}/150</text>
       </view>
       <view class="form-item">
         <text class="form-label">汤底 *</text>
         <textarea class="form-textarea" value="{{editQuestion.bottom}}" bindinput="onInputBottom" placeholder="50字以内，逻辑严密" maxlength="100" />
-        <text class="char-count">{{editQuestion.bottom?.length || 0}}/100</text>
+        <text class="char-count">{{editQuestion.bottomLength}}/100</text>
       </view>
       <view class="form-item">
         <text class="form-label">提示（每行一个）</text>
