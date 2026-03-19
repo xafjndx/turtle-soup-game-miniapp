@@ -205,17 +205,14 @@ Page({
     this.setData({ loading: true });
 
     try {
-      // 获取用户信息
-      const userInfo = await wx.getUserProfile({
-        desc: '用于完善用户资料',
-      });
-
-      // 微信登录
+      // 微信登录获取 code
       const loginRes = await wx.login();
+      
+      // 调用后端微信登录接口，后端会用 code 换取 openId
       const result = await wechatLogin(
-        loginRes.code,
-        userInfo.userInfo.nickName,
-        userInfo.userInfo.avatarUrl
+        loginRes.code,  // 传 code，后端会换取 openId
+        '',  // nickname 暂时为空
+        ''   // avatarUrl 暂时为空
       );
 
       wx.setStorageSync('token', result.token);
@@ -227,6 +224,7 @@ Page({
         wx.switchTab({ url: '/pages/index/index' });
       }, 1000);
     } catch (err: any) {
+      console.error('微信登录失败:', err);
       wx.showToast({ title: err.message || '登录失败', icon: 'none' });
     } finally {
       this.setData({ loading: false });

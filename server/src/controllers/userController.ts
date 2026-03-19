@@ -10,6 +10,9 @@ export const login = [
   // 验证规则
   body('username').optional().isLength({ min: 2, max: 20 }).withMessage('用户名长度为2-20个字符'),
   body('openId').optional().isString().withMessage('无效的微信登录'),
+  body('code').optional().isString().withMessage('无效的微信登录凭证'),
+  body('nickname').optional().isString(),
+  body('avatarUrl').optional().isString(),
 
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -19,16 +22,54 @@ export const login = [
         return;
       }
 
-      const { username, openId, nickname, avatarUrl } = req.body;
+      const { username, openId, code, nickname, avatarUrl } = req.body;
 
       // 微信登录
-      if (openId) {
-        let user = await userService.findByOpenId(openId);
+      let wechatOpenId = openId;
+      
+      // 如果传的是 code，用 code 换取 openId
+      if (code && !openId) {
+        try {
+          const axios = require('axios');
+          const wxAppId = process.env.WECHAT_APPID;
+          const wxSecret = process.env.WECHAT_SECRET;
+          
+          if (!wxAppId || !wxSecret || wxAppId === 'your-wechat-appid') {
+            // 微信配置未设置，返回错误
+            error(res, ErrorCode.INTERNAL_ERROR, '微信登录未配置，请联系管理员');
+            return;
+          }
+          
+          const wxRes = await axios.get('https://api.weixin.qq.com/sns/jscode2session', {
+            params: {
+              appid: wxAppId,
+              secret: wxSecret,
+              js_code: code,
+              grant_type: 'authorization_code',
+            },
+          });
+          
+          if (wxRes.data.openid) {
+            wechatOpenId = wxRes.data.openid;
+          } else {
+            console.error('微信登录失败:', wxRes.data);
+            error(res, ErrorCode.INTERNAL_ERROR, wxRes.data.errmsg || '微信登录失败');
+            return;
+          }
+        } catch (err) {
+          console.error('微信登录请求失败:', err);
+          error(res, ErrorCode.INTERNAL_ERROR, '微信登录服务暂时不可用');
+          return;
+        }
+      }
+
+      if (wechatOpenId) {
+        let user = await userService.findByOpenId(wechatOpenId);
         
         if (!user) {
           // 新用户，创建账号
           user = await userService.create({
-            openId,
+            openId: wechatOpenId,
             username: nickname || `用户${Date.now().toString(36)}`,
             nickname,
             avatarUrl,

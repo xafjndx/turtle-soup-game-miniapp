@@ -37,8 +37,8 @@ app.get('/health', (req, res) => {
     status: 'ok',
     timestamp: Date.now(),
     environment: config.server.nodeEnv,
-    version: '0fb45aa',  // 当前部署版本
-    buildTime: '2026-03-19 21:35',
+    version: 'a531325',  // 当前部署版本
+    buildTime: '2026-03-19 21:45',
   });
 });
 

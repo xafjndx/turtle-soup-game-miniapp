@@ -29,8 +29,9 @@ export function login(username: string): Promise<LoginResult> {
 }
 
 // 微信登录（公开接口，不需要登录）
-export function wechatLogin(openId: string, nickname?: string, avatarUrl?: string): Promise<LoginResult> {
-  return post<LoginResult>('/user/login', { openId, nickname, avatarUrl }, false);
+// code: wx.login() 获取的登录凭证，后端会用它换取 openId
+export function wechatLogin(code: string, nickname?: string, avatarUrl?: string): Promise<LoginResult> {
+  return post<LoginResult>('/user/login', { code, nickname, avatarUrl }, false);
 }
 
 // 获取用户信息
