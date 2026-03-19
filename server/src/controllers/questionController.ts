@@ -348,7 +348,7 @@ export const submitQuestion = [
         hints,
         keywords,
         source: 'USER_SUBMITTED', // 用户投稿
-        submittedBy: req.userId,  // 记录投稿者
+        // submittedBy: req.userId,  // 暂时注释，等待数据库迁移
       });
 
       // ⚠️ 重要：用户投稿的题目默认状态为 PENDING

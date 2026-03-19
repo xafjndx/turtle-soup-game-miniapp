@@ -36,7 +36,7 @@ class QuestionService {
         hints: typeof data.hints === 'string' ? data.hints : JSON.stringify(data.hints),
         keywords: typeof data.keywords === 'string' ? data.keywords : JSON.stringify(data.keywords),
         source: data.source || 'PLATFORM',
-        submittedBy: data.submittedBy,
+        // submittedBy: data.submittedBy, // 暂时注释，等待数据库迁移
         aiGeneratedBy: data.aiGeneratedBy,
         crawlSource: data.crawlSource,
         crawlUrl: data.crawlUrl,

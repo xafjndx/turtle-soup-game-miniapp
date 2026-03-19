@@ -52,7 +52,6 @@ model Question {
   hints         String        @db.Text
   keywords      String        @db.Text
   source        String        @default("PLATFORM") @db.VarChar(20)
-  submittedBy   String?       @db.VarChar(100)  // 投稿者用户ID
   aiGeneratedBy String?       @db.VarChar(100)
   aiGeneratedAt DateTime?
   crawlSource   String?       @db.VarChar(100)
@@ -70,7 +69,6 @@ model Question {
 
   @@index([category, status])
   @@index([source, status])
-  @@index([submittedBy])
   @@map("questions")
 }
 
