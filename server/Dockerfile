@@ -6,20 +6,21 @@ WORKDIR /app
 # 安装 OpenSSL（Prisma 需要）
 RUN apk add --no-cache openssl
 
-# 安装依赖
+# 先复制 prisma schema 和 package.json
 COPY package*.json ./
-RUN npm ci --only=production
+COPY prisma ./prisma/
+
+# 安装依赖并生成 Prisma Client（单独一层，避免缓存问题）
+RUN npm ci --only=production && \
+    rm -rf node_modules/.prisma && \
+    npx prisma generate
 
 # 复制源代码
 COPY . .
 
-# 生成 Prisma Client
-RUN npx prisma generate
-
 # 构建 TypeScript
 RUN npm run build
 
-# 运行数据库迁移（需要在启动时执行）
 # 创建启动脚本
 RUN echo '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js' > start.sh && chmod +x start.sh
 
