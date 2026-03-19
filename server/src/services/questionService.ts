@@ -2,7 +2,7 @@ import prisma from '../utils/prisma';
 
 // 类型定义
 export type QuestionCategory = 'CLASSIC' | 'HORROR' | 'LOGIC' | 'WARM';
-export type QuestionSource = 'PLATFORM' | 'CRAWLER' | 'AI_GENERATED';
+export type QuestionSource = 'PLATFORM' | 'CRAWLER' | 'AI_GENERATED' | 'USER_SUBMITTED';
 export type QuestionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'SOFT_DELETED' | 'HARD_DELETED';
 
 export interface CreateQuestionData {
