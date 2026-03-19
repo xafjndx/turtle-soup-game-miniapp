@@ -288,14 +288,14 @@ export const getStatistics = [
       const categoryStats = await prisma.question.groupBy({
         by: ['category'],
         where: { status: 'APPROVED' },
-        _count: true,
+        _count: { id: true },
       });
 
       // 按来源统计题目
       const sourceStats = await prisma.question.groupBy({
         by: ['source'],
         where: { status: 'APPROVED' },
-        _count: true,
+        _count: { id: true },
       });
 
       success(res, {
@@ -308,11 +308,11 @@ export const getStatistics = [
           pending: pendingCount,
           softDeleted: softDeletedCount,
           byCategory: categoryStats.reduce((acc, item) => {
-            acc[item.category] = item._count;
+            acc[item.category] = item._count.id;
             return acc;
           }, {} as Record<string, number>),
           bySource: sourceStats.reduce((acc, item) => {
-            acc[item.source] = item._count;
+            acc[item.source] = item._count.id;
             return acc;
           }, {} as Record<string, number>),
         },
