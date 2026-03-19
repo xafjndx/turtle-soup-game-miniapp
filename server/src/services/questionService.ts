@@ -13,6 +13,7 @@ export interface CreateQuestionData {
   hints: string[] | string;
   keywords: string[] | string;
   source?: QuestionSource;
+  submittedBy?: string;  // 投稿者用户ID
   aiGeneratedBy?: string;
   crawlSource?: string;
   crawlUrl?: string;
@@ -35,6 +36,7 @@ class QuestionService {
         hints: typeof data.hints === 'string' ? data.hints : JSON.stringify(data.hints),
         keywords: typeof data.keywords === 'string' ? data.keywords : JSON.stringify(data.keywords),
         source: data.source || 'PLATFORM',
+        submittedBy: data.submittedBy,
         aiGeneratedBy: data.aiGeneratedBy,
         crawlSource: data.crawlSource,
         crawlUrl: data.crawlUrl,
