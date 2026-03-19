@@ -7,7 +7,7 @@
     <text class="subtitle">推理游戏</text>
   </view>
 
-  <!-- 排行榜 TOP3 -->
+  <!-- 排行榜 TOP3 - 居中显示 -->
   <view class="top3-section" wx:if="{{top3.length > 0}}">
     <view class="section-title">🏆 命中率排行榜</view>
     <view class="top3-list">
@@ -36,27 +36,29 @@
       <button class="btn-primary" bindtap="onUsernameLogin" loading="{{loading}}">
         开始游戏
       </button>
-      <view class="switch-text" bindtap="toggleMode" wx:if="{{existingUsers.length > 0}}">
+      <view class="switch-text switch-text-yellow" bindtap="toggleMode" wx:if="{{existingUsers.length > 0}}">
         已有账号？点击登录
       </view>
     </view>
 
-    <!-- 已有账号选择 -->
+    <!-- 已有账号选择 - 可滑动 -->
     <view class="existing-section" wx:else>
       <view class="section-title">选择账号登录</view>
-      <view class="user-list">
-        <view 
-          class="user-item" 
-          wx:for="{{existingUsers}}" 
-          wx:key="id"
-          data-username="{{item.username}}"
-          bindtap="onSelectUser"
-        >
-          <image class="avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
-          <text class="username">{{item.nickname || item.username}}</text>
+      <scroll-view scroll-y class="user-scroll">
+        <view class="user-list">
+          <view 
+            class="user-item" 
+            wx:for="{{existingUsers}}" 
+            wx:key="id"
+            data-username="{{item.username}}"
+            bindtap="onSelectUser"
+          >
+            <image class="avatar" src="{{item.avatarUrl || '/assets/images/default-avatar.png'}}" />
+            <text class="username">{{item.nickname || item.username}}</text>
+          </view>
         </view>
-      </view>
-      <view class="switch-text" bindtap="toggleMode">
+      </scroll-view>
+      <view class="switch-text switch-text-yellow" bindtap="toggleMode">
         创建新账号
       </view>
     </view>

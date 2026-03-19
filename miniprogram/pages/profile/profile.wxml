@@ -1,6 +1,6 @@
 <!--pages/profile/profile.wxml-->
 <view class="container">
-  <!-- 用户信息 -->
+  <!-- 用户信息 - 退出按钮移到右上角 -->
   <view class="user-section">
     <view class="avatar">
       <image src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
@@ -11,6 +11,7 @@
         <text>排名 #{{userInfo.rank || '--'}}</text>
       </view>
     </view>
+    <button class="btn-logout-top" bindtap="onLogout">退出登录</button>
   </view>
 
   <!-- 统计数据 -->
@@ -107,11 +108,6 @@
         </view>
       </view>
     </view>
-  </view>
-
-  <!-- 退出登录 -->
-  <view class="logout-section">
-    <button class="btn-logout" bindtap="onLogout">退出登录</button>
   </view>
 </view>
 

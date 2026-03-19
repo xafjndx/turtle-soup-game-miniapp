@@ -454,11 +454,46 @@
   border: none;
 }
 
-/* 题目详情弹窗 */
+/* 待审核详情弹窗 */
 .question-detail-modal {
   max-width: 650rpx;
 }
 
+.question-detail-modal .modal-body {
+  padding: 20rpx 30rpx;
+}
+
+.question-detail-modal .detail-row,
+.question-detail-modal .detail-section {
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.question-detail-modal .detail-label {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.question-detail-modal .detail-value {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+  padding-left: 16rpx;
+  display: block;
+}
+
+.question-detail-modal .detail-section {
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
 .question-modal {
   max-width: 650rpx;
+}
+
+/* 编辑弹窗表单 */
+.modal-form {
+  padding: 20rpx 30rpx;
+  max-height: 60vh;
 }

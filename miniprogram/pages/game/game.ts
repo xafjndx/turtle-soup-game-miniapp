@@ -6,8 +6,10 @@ import {
   endGame,
   saveAIQuestion 
 } from '../../api/index';
-import SpeechRecognition from '../../utils/sr';
-import { getToken } from '../../utils/token';
+
+// 使用 require 导入 CommonJS 模块
+const SpeechRecognition = require('../../utils/sr');
+const { getToken } = require('../../utils/token');
 
 const APPKEY = '9VjrIoolPvwUSKyX';
 

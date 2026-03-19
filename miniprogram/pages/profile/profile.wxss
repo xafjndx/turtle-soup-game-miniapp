@@ -49,6 +49,22 @@
   color: #fff;
 }
 
+/* 退出登录按钮 - 右上角 */
+.btn-logout-top {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 30rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.3);
+  height: auto;
+  line-height: 1.4;
+}
+
+.btn-logout-top::after {
+  border: none;
+}
+
 .stats-section {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
