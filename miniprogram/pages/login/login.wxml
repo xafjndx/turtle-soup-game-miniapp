@@ -60,16 +60,6 @@
         创建新账号
       </view>
     </view>
-
-    <!-- 微信登录 -->
-    <view class="wechat-login">
-      <view class="divider">
-        <text>或</text>
-      </view>
-      <button class="btn-wechat" bindtap="onWechatLogin" loading="{{loading}}">
-        <text class="icon">📱</text> 微信一键登录
-      </button>
-    </view>
   </view>
 
   <!-- 底部隐私政策入口 -->

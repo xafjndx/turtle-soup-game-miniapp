@@ -179,8 +179,9 @@ export function getAdminStatistics(): Promise<AdminStats> {
 }
 
 // 获取待审核题目列表
-export function getPendingQuestions(pageSize = 10): Promise<AdminQuestion[]> {
-  return get<AdminQuestion[]>('/admin/questions', { status: 'PENDING', pageSize });
+export async function getPendingQuestions(pageSize = 10): Promise<AdminQuestion[]> {
+  const result = await get<{ list: AdminQuestion[]; total: number }>('/admin/questions', { status: 'PENDING', pageSize });
+  return result.list || [];
 }
 
 // 更新题目状态
