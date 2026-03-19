@@ -755,6 +755,7 @@ export const deleteUser = [
 export const updateQuestion = [
   authMiddleware,
   param('id').isString().withMessage('无效的题目ID'),
+  body('title').optional().isString(),
   body('category').optional().isIn(['CLASSIC', 'HORROR', 'LOGIC', 'WARM']),
   body('surface').optional().isString(),
   body('bottom').optional().isString(),
@@ -771,12 +772,13 @@ export const updateQuestion = [
       }
 
       const { id } = req.params;
-      const { category, surface, bottom, hints, keywords, status } = req.body;
+      const { title, category, surface, bottom, hints, keywords, status } = req.body;
 
       const updateData: any = {
         updatedAt: new Date(),
       };
 
+      if (title !== undefined) updateData.title = title;
       if (category) updateData.category = category;
       if (surface) updateData.surface = surface;
       if (bottom) updateData.bottom = bottom;
@@ -794,7 +796,7 @@ export const updateQuestion = [
         data: updateData,
       });
 
-      await logOperation(req.userId!, 'UPDATE_QUESTION', id, { category, surface, bottom, status });
+      await logOperation(req.userId!, 'UPDATE_QUESTION', id, { title, category, surface, bottom, status });
 
       success(res, question, '题目更新成功');
     } catch (err) {

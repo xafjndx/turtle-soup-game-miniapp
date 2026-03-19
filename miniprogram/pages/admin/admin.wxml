@@ -283,6 +283,10 @@
     <view class="modal-title">{{editQuestion.id ? '编辑题目' : '新增题目'}}</view>
     <scroll-view scroll-y class="modal-form">
       <view class="form-item">
+        <text class="form-label">标题 *</text>
+        <input class="form-input" value="{{editQuestion.title}}" bindinput="onInputTitle" placeholder="给题目起个名字" maxlength="50" />
+      </view>
+      <view class="form-item">
         <text class="form-label">分类</text>
         <picker mode="selector" range="{{categories}}" range-key="label" value="{{categoryIndex}}" bindchange="onPickCategory">
           <view class="picker-value">{{categories[categoryIndex].label}}</view>
@@ -299,8 +303,16 @@
         <text class="char-count">{{editQuestion.bottomLength}}/100</text>
       </view>
       <view class="form-item">
-        <text class="form-label">提示（每行一个）</text>
-        <textarea class="form-textarea" value="{{editQuestion.hintsText}}" bindinput="onInputHints" placeholder="提示1&#10;提示2&#10;提示3" maxlength="200" />
+        <text class="form-label">提示1</text>
+        <input class="form-input" value="{{editQuestion.hint1}}" bindinput="onInputHint1" placeholder="第一个提示（最简单）" maxlength="100" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">提示2</text>
+        <input class="form-input" value="{{editQuestion.hint2}}" bindinput="onInputHint2" placeholder="第二个提示（中等难度）" maxlength="100" />
+      </view>
+      <view class="form-item">
+        <text class="form-label">提示3</text>
+        <input class="form-input" value="{{editQuestion.hint3}}" bindinput="onInputHint3" placeholder="第三个提示（最难）" maxlength="100" />
       </view>
       <view class="form-item">
         <text class="form-label">关键词（逗号分隔）</text>

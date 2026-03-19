@@ -307,10 +307,13 @@ Page({
     this.setData({
       showQuestionModal: true,
       editQuestion: {
+        title: '',
         category: 'CLASSIC',
         surface: '',
         bottom: '',
-        hintsText: '',
+        hint1: '',
+        hint2: '',
+        hint3: '',
         keywordsText: '',
         surfaceLength: 0,
         bottomLength: 0,
@@ -342,16 +345,20 @@ Page({
 
   editFromDetail() {
     const q = this.data.questionDetail;
+    const hints = typeof q.hints === 'string' ? JSON.parse(q.hints) : q.hints;
     const categoryIndex = this.data.categories.findIndex(c => c.value === q.category);
     this.setData({
       showQuestionDetailModal: false,
       showQuestionModal: true,
       editQuestion: {
         id: q.id,
+        title: q.title || '',
         category: q.category,
         surface: q.surface,
         bottom: q.bottom,
-        hintsText: q.hintsText,
+        hint1: Array.isArray(hints) ? (hints[0] || '') : '',
+        hint2: Array.isArray(hints) ? (hints[1] || '') : '',
+        hint3: Array.isArray(hints) ? (hints[2] || '') : '',
         keywordsText: q.keywordsText,
         surfaceLength: q.surface.length,
         bottomLength: q.bottom.length,
@@ -371,10 +378,13 @@ Page({
         showQuestionModal: true,
         editQuestion: {
           id: q.id,
+          title: q.title || '',
           category: q.category,
           surface: q.surface,
           bottom: q.bottom,
-          hintsText: Array.isArray(hints) ? hints.join('\n') : hints,
+          hint1: Array.isArray(hints) ? (hints[0] || '') : '',
+          hint2: Array.isArray(hints) ? (hints[1] || '') : '',
+          hint3: Array.isArray(hints) ? (hints[2] || '') : '',
           keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
           surfaceLength: q.surface.length,
           bottomLength: q.bottom.length,
@@ -468,10 +478,13 @@ Page({
         showQuestionModal: true,
         editQuestion: {
           id: q.id,
+          title: q.title || '',
           category: q.category,
           surface: q.surface,
           bottom: q.bottom,
-          hintsText: Array.isArray(hints) ? hints.join('\n') : hints,
+          hint1: Array.isArray(hints) ? (hints[0] || '') : '',
+          hint2: Array.isArray(hints) ? (hints[1] || '') : '',
+          hint3: Array.isArray(hints) ? (hints[2] || '') : '',
           keywordsText: Array.isArray(keywords) ? keywords.join(', ') : keywords,
           surfaceLength: q.surface.length,
           bottomLength: q.bottom.length,
@@ -504,8 +517,20 @@ Page({
     });
   },
 
-  onInputHints(e: any) {
-    this.setData({ 'editQuestion.hintsText': e.detail.value });
+  onInputTitle(e: any) {
+    this.setData({ 'editQuestion.title': e.detail.value });
+  },
+
+  onInputHint1(e: any) {
+    this.setData({ 'editQuestion.hint1': e.detail.value });
+  },
+
+  onInputHint2(e: any) {
+    this.setData({ 'editQuestion.hint2': e.detail.value });
+  },
+
+  onInputHint3(e: any) {
+    this.setData({ 'editQuestion.hint3': e.detail.value });
   },
 
   onInputKeywords(e: any) {
@@ -520,6 +545,12 @@ Page({
 
   async onSaveQuestion() {
     const { editQuestion } = this.data;
+    
+    // 验证必填字段
+    if (!editQuestion.title || !editQuestion.title.trim()) {
+      wx.showToast({ title: '请输入标题', icon: 'none' });
+      return;
+    }
     if (!editQuestion.surface || !editQuestion.surface.trim()) {
       wx.showToast({ title: '请输入汤面', icon: 'none' });
       return;
@@ -529,7 +560,8 @@ Page({
       return;
     }
 
-    const hints = editQuestion.hintsText.split('\n').filter((h: string) => h.trim());
+    // 合并三个提示字段
+    const hints = [editQuestion.hint1, editQuestion.hint2, editQuestion.hint3].filter((h: string) => h && h.trim());
     const keywords = editQuestion.keywordsText.split(/[,，]/).filter((k: string) => k.trim());
 
     try {
@@ -540,10 +572,11 @@ Page({
           method: 'PUT',
           header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
           data: {
+            title: editQuestion.title,
             category: editQuestion.category,
             surface: editQuestion.surface,
             bottom: editQuestion.bottom,
-            hints,
+            hints: hints.length > 0 ? hints : ['暂无提示'],
             keywords,
             status: editQuestion.isPending ? 'APPROVED' : undefined,
           },
@@ -555,6 +588,7 @@ Page({
           method: 'POST',
           header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
           data: {
+            title: editQuestion.title,
             category: editQuestion.category,
             surface: editQuestion.surface,
             bottom: editQuestion.bottom,
