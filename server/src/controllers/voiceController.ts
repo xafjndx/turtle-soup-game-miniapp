@@ -39,3 +39,25 @@ export const recognizeVoice = [
     }
   },
 ];
+
+/**
+ * 测试语音识别配置接口
+ * GET /api/voice/test-config
+ */
+export const testConfig = async (req: Request, res: Response, next: NextFunction) => {
+  const accessKeyId = process.env.ALIYUN_ACCESS_KEY_ID;
+  const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
+  const appKey = process.env.ALIYUN_NLS_APP_KEY || '9VjrIoolPvwUSKyX';
+
+  const configStatus = {
+    accessKeyId: accessKeyId ? `${accessKeyId.substring(0, 8)}****` : '未配置',
+    accessKeySecret: accessKeySecret ? '已配置（已隐藏）' : '未配置',
+    appKey: appKey,
+    isConfigured: !!(accessKeyId && accessKeySecret),
+  };
+
+  success(res, {
+    config: configStatus,
+    message: configStatus.isConfigured ? '语音识别配置正常' : '语音识别未配置，请检查环境变量',
+  });
+};
