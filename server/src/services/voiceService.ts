@@ -72,9 +72,9 @@ class VoiceService {
   }
 
   /**
-   * 获取临时 Token
+   * 获取临时 Token（公开方法）
    */
-  private async getToken(): Promise<string> {
+  async getToken(): Promise<string> {
     try {
       const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
       const nonce = Math.random().toString(36).substring(2);

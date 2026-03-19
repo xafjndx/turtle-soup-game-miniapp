@@ -6,6 +6,10 @@ import {
   endGame,
   saveAIQuestion 
 } from '../../api/index';
+import SpeechRecognition from '../../utils/sr';
+import { getToken } from '../../utils/token';
+
+const APPKEY = '9VjrIoolPvwUSKyX';
 
 Page({
   data: {
@@ -32,6 +36,7 @@ Page({
     // 录音
     isRecording: false,
     recorderManager: null as any,
+    sr: null as any,  // 语音识别实例
   },
 
   onLoad(options) {
@@ -44,6 +49,13 @@ Page({
     // 初始化录音管理器
     this.setData({
       recorderManager: wx.getRecorderManager(),
+    });
+    
+    // 录音帧回调 - 实时发送音频数据
+    this.data.recorderManager.onFrameRecorded((res: any) => {
+      if (this.data.sr && this.data.isRecording) {
+        this.data.sr.sendAudio(res.frameBuffer);
+      }
     });
     
     // 录音结束回调
@@ -108,66 +120,43 @@ Page({
   },
 
   // 开始录音
-  startRecording() {
+  async startRecording() {
     this.setData({ isRecording: true });
-    this.data.recorderManager.start({
-      duration: 60000,
-      sampleRate: 16000,
-      numberOfChannels: 1,
-      format: 'mp3',
-    });
-  },
-
-  // 停止录音
-  stopRecording() {
-    this.setData({ isRecording: false });
-    this.data.recorderManager.stop();
-  },
-
-  // 录音结束处理
-  async handleRecordingEnd(res: any) {
-    wx.showLoading({ title: '语音识别中...', icon: 'loading' });
     
     try {
-      // 读取音频文件并转为 base64
-      const fileInfo = await new Promise<string>((resolve, reject) => {
-        wx.getFileSystemManager().readFile({
-          filePath: res.tempFilePath,
-          encoding: 'base64',
-          success: (fileRes) => resolve(fileRes.data as string),
-          fail: reject,
-        });
+      // 获取 Token
+      const token = await getToken();
+      
+      // 创建语音识别实例
+      const sr = new SpeechRecognition({
+        url: 'wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1',
+        token: token,
+        appkey: APPKEY,
       });
       
-      // 调用后端语音识别 API
-      const token = wx.getStorageSync('token');
-      const response = await new Promise<any>((resolve, reject) => {
-        wx.request({
-          url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/voice/recognize',
-          method: 'POST',
-          data: {
-            audio: fileInfo,
-            format: 'mp3',
-          },
-          header: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
-          },
-          success: (res: any) => resolve(res.data),
-          fail: reject,
-        });
+      // 注册事件回调
+      sr.on('started', (msg: string) => {
+        console.log('识别开始:', msg);
       });
       
-      wx.hideLoading();
+      sr.on('changed', (msg: string) => {
+        console.log('中间结果:', msg);
+        // 显示中间结果
+        this.setData({ playerInput: msg });
+      });
       
-      if (response.code === 0 && response.data.text) {
-        this.setData({ playerInput: response.data.text });
-        wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
-      } else if (response.data?.fallback) {
-        // 语音识别失败，提示用户
+      sr.on('completed', (msg: string) => {
+        console.log('识别完成:', msg);
+        this.setData({ playerInput: msg });
+        wx.hideLoading();
+      });
+      
+      sr.on('failed', (msg: string) => {
+        console.error('识别失败:', msg);
+        wx.hideLoading();
         wx.showModal({
           title: '语音识别失败',
-          content: response.data.error || '请使用文字输入',
+          content: msg || '请使用文字输入',
           confirmText: '切换文字',
           showCancel: true,
           success: (modalRes) => {
@@ -176,15 +165,32 @@ Page({
             }
           },
         });
-      } else {
-        throw new Error(response.message || '识别失败');
-      }
+      });
+      
+      sr.on('closed', () => {
+        console.log('连接关闭');
+      });
+      
+      this.setData({ sr });
+      
+      // 开始识别
+      await sr.start(sr.defaultStartParams());
+      
+      // 开始录音（PCM 格式，实时发送帧）
+      this.data.recorderManager.start({
+        duration: 60000,
+        sampleRate: 16000,
+        numberOfChannels: 1,
+        format: 'PCM',
+        frameSize: 4,  // 每 4 帧回调一次
+      });
+      
     } catch (err: any) {
-      wx.hideLoading();
-      console.error('语音识别失败:', err);
+      console.error('语音识别初始化失败:', err);
+      this.setData({ isRecording: false });
       wx.showModal({
         title: '语音识别失败',
-        content: '请使用文字输入，或检查网络后重试',
+        content: err.message || '请检查网络后重试',
         confirmText: '切换文字',
         showCancel: true,
         success: (modalRes) => {
@@ -194,6 +200,29 @@ Page({
         },
       });
     }
+  },
+
+  // 停止录音
+  async stopRecording() {
+    this.setData({ isRecording: false });
+    
+    // 停止录音
+    this.data.recorderManager.stop();
+    
+    // 停止识别
+    if (this.data.sr) {
+      try {
+        await this.data.sr.close();
+      } catch (e) {
+        console.error('停止识别失败:', e);
+      }
+    }
+  },
+
+  // 录音结束处理
+  async handleRecordingEnd(res: any) {
+    // WebSocket 模式下，识别结果在 completed 回调中处理
+    // 这里不需要额外处理
   },
 
   // 提交提问

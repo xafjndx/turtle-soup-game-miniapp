@@ -61,3 +61,20 @@ export const testConfig = async (req: Request, res: Response, next: NextFunction
     message: configStatus.isConfigured ? '语音识别配置正常' : '语音识别未配置，请检查环境变量',
   });
 };
+
+/**
+ * 获取语音识别 Token
+ * GET /api/voice/token
+ */
+export const getToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = await voiceService.getToken();
+    
+    success(res, {
+      token,
+      expireTime: Date.now() + 24 * 60 * 60 * 1000, // 24小时有效
+    });
+  } catch (err: any) {
+    error(res, ErrorCode.INTERNAL_ERROR, err.message || '获取 Token 失败');
+  }
+};

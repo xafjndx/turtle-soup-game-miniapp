@@ -89,5 +89,6 @@ router.post('/admin/ai-config/test', authMiddleware, adminController.testAIConne
 // 语音识别（Base64 数据）
 router.post('/voice/recognize', voiceController.recognizeVoice);
 router.get('/voice/test-config', voiceController.testConfig);  // 测试配置接口
+router.get('/voice/token', voiceController.getToken);  // 获取 Token 接口
 
 export default router;
