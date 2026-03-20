@@ -1,8 +1,59 @@
 // api/index.ts
 // API 接口定义
 
-import request from '../utils/request';
-const { get, post, put, del } = request;
+// ==================== 基础请求方法 ====================
+
+const BASE_URL = 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api';
+
+interface ApiResponse<T = any> {
+  code: number;
+  message: string;
+  data: T;
+  timestamp: number;
+}
+
+function request<T = any>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', data?: any, needAuth: boolean = true): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('token');
+
+    if (needAuth && !token) {
+      wx.navigateTo({ url: '/pages/login/login' });
+      reject(new Error('请先登录'));
+      return;
+    }
+
+    wx.request({
+      url: `${BASE_URL}${url}`,
+      method,
+      data,
+      header: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      success: (res: any) => {
+        const responseData: ApiResponse<T> = res.data;
+        if (responseData.code === 0) {
+          resolve(responseData.data);
+        } else if (responseData.code === 401) {
+          wx.removeStorageSync('token');
+          wx.removeStorageSync('userInfo');
+          wx.navigateTo({ url: '/pages/login/login' });
+          reject(new Error('登录已过期'));
+        } else {
+          reject(new Error(responseData.message || '请求失败'));
+        }
+      },
+      fail: () => {
+        reject(new Error('网络错误，请稍后重试'));
+      },
+    });
+  });
+}
+
+const get = <T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> => request<T>(url, 'GET', data, needAuth);
+const post = <T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> => request<T>(url, 'POST', data, needAuth);
+const put = <T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> => request<T>(url, 'PUT', data, needAuth);
+const del = <T = any>(url: string, data?: any, needAuth: boolean = true): Promise<T> => request<T>(url, 'DELETE', data, needAuth);
 
 // ==================== 用户相关 ====================
 
@@ -24,28 +75,22 @@ export interface LoginResult {
   isNewUser: boolean;
 }
 
-// 用户登录（公开接口，不需要登录）
 export function login(username: string): Promise<LoginResult> {
   return post<LoginResult>('/user/login', { username }, false);
 }
 
-// 微信登录（公开接口，不需要登录）
-// code: wx.login() 获取的登录凭证，后端会用它换取 openId
 export function wechatLogin(code: string, nickname?: string, avatarUrl?: string): Promise<LoginResult> {
   return post<LoginResult>('/user/login', { code, nickname, avatarUrl }, false);
 }
 
-// 获取用户信息
 export function getUserProfile(): Promise<User> {
   return get<User>('/user/profile');
 }
 
-// 检查是否是管理员
 export function checkIsAdmin(): Promise<{ isAdmin: boolean; role: string | null; permissions: string[] }> {
   return get<{ isAdmin: boolean; role: string | null; permissions: string[] }>('/user/isAdmin');
 }
 
-// 导出用户数据
 export function exportUserData(): Promise<{
   exportTime: string;
   user: User;
@@ -54,12 +99,10 @@ export function exportUserData(): Promise<{
   return get('/user/export');
 }
 
-// 注销账号
 export function deleteAccount(): Promise<{ message: string; deletedAt: string }> {
   return del('/user/delete');
 }
 
-// 获取账号列表（公开接口，不需要登录）
 export function getUserList(): Promise<User[]> {
   return get<User[]>('/user/list', undefined, false);
 }
@@ -76,12 +119,10 @@ export interface LeaderboardItem {
   winCount: number;
 }
 
-// 获取 TOP3（公开接口，不需要登录）
 export function getTop3(): Promise<LeaderboardItem[]> {
   return get<LeaderboardItem[]>('/leaderboard/top3', undefined, false);
 }
 
-// 获取完整排行榜
 export function getLeaderboard(limit = 100): Promise<LeaderboardItem[]> {
   return get<LeaderboardItem[]>('/leaderboard', { limit });
 }
@@ -106,17 +147,14 @@ export interface DrawResult {
   hasPlayed: boolean;
 }
 
-// 获取题目分类
 export function getCategories(): Promise<string[]> {
   return get<string[]>('/question/categories');
 }
 
-// 抽取题目
 export function drawQuestion(category?: QuestionCategory): Promise<DrawResult> {
   return get<DrawResult>('/question/draw', { category });
 }
 
-// 获取题目详情
 export function getQuestionDetail(id: string): Promise<Question> {
   return get<Question>(`/question/${id}`);
 }
@@ -138,12 +176,10 @@ export interface SubmitQuestionResult {
   status: 'PENDING';
 }
 
-// 用户投稿题目
 export function submitQuestion(data: SubmitQuestionData): Promise<SubmitQuestionResult> {
   return post<SubmitQuestionResult>('/question/submit', data);
 }
 
-// 投稿排行榜
 export interface SubmitLeaderboardItem {
   rank: number;
   userId: string;
@@ -175,18 +211,15 @@ export interface AdminQuestion {
   createdAt: string;
 }
 
-// 获取管理统计数据
 export function getAdminStatistics(): Promise<AdminStats> {
   return get<AdminStats>('/admin/statistics');
 }
 
-// 获取待审核题目列表
 export async function getPendingQuestions(pageSize = 10): Promise<AdminQuestion[]> {
   const result = await get<{ list: AdminQuestion[]; total: number }>('/admin/questions', { status: 'PENDING', pageSize });
   return result.list || [];
 }
 
-// 更新题目状态
 export function updateQuestionStatus(id: string, status: string): Promise<void> {
   return put<void>(`/admin/question/${id}/status`, { status });
 }
@@ -249,7 +282,6 @@ export interface HintResult {
   hintRemaining: number;
 }
 
-// 开始游戏
 export function startGame(
   source: 'BANK' | 'AI_GENERATED',
   category?: QuestionCategory
@@ -257,12 +289,10 @@ export function startGame(
   return post<StartGameResult>('/game/start', { source, category });
 }
 
-// 获取当前会话
 export function getCurrentSession(): Promise<GameSession | null> {
   return get<GameSession | null>('/game/session');
 }
 
-// 提交回合
 export function submitRound(
   sessionId: string,
   inputMode: InputMode,
@@ -276,12 +306,10 @@ export function submitRound(
   });
 }
 
-// 使用提示
 export function useHint(sessionId: string): Promise<HintResult> {
   return post<HintResult>(`/game/session/${sessionId}/hint`);
 }
 
-// 结束游戏
 export function endGame(
   sessionId: string,
   result: GameResult,
@@ -290,12 +318,10 @@ export function endGame(
   return post(`/game/session/${sessionId}/end`, { result, revealedAnswer });
 }
 
-// AI 题目入库
 export function saveAIQuestion(sessionId: string): Promise<{ message: string }> {
   return post(`/game/session/${sessionId}/save`);
 }
 
-// 获取游戏历史
 export function getGameHistory(limit = 20): Promise<any[]> {
   return get('/game/history', { limit });
 }
