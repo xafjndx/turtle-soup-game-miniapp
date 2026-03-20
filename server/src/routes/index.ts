@@ -86,9 +86,16 @@ router.post('/admin/ai-config/test', authMiddleware, adminController.testAIConne
 
 // ==================== 语音识别路由 ====================
 
-// 语音识别（Base64 数据）
+// 健康检查（公开）
+router.get('/voice/health', voiceController.healthCheck);
+
+// 语音识别（Base64 数据，需登录）
 router.post('/voice/recognize', voiceController.recognizeVoice);
-router.get('/voice/test-config', voiceController.testConfig);  // 测试配置接口
-router.get('/voice/token', voiceController.getToken);  // 获取 Token 接口
+
+// 测试配置接口
+router.get('/voice/test-config', voiceController.testConfig);
+
+// 获取 Token 接口
+router.get('/voice/token', voiceController.getToken);
 
 export default router;

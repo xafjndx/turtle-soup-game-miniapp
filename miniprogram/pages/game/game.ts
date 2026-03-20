@@ -7,11 +7,16 @@ import {
   saveAIQuestion 
 } from '../../api/index';
 
-// 暂时禁用语音识别功能，确保游戏页面正常运行
-// const SpeechRecognition = require('../../utils/sr');
-// const { getToken } = require('../../utils/token');
+// 后端地址配置（应从环境或配置文件读取）
+const API_BASE_URL = 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api';
 
-const APPKEY = '9VjrIoolPvwUSKyX';
+// 录音配置
+const RECORDER_CONFIG = {
+  duration: 60000,      // 最长录音时长 60秒
+  sampleRate: 16000,    // 采样率 16kHz（阿里云推荐）
+  numberOfChannels: 1,  // 单声道
+  format: 'pcm' as const, // PCM 格式（阿里云推荐，识别率更高）
+};
 
 Page({
   data: {
@@ -30,38 +35,47 @@ Page({
     // 结束弹窗
     showEndModal: false,
     showResultModal: false,
-    showEndChoice: false,  // 结束选择弹窗
+    showEndChoice: false,
     gameResult: null as any,
     revealedAnswer: false,
-    savedToBank: false,  // 是否已加入题库
+    savedToBank: false,
     
     // 录音
     isRecording: false,
     recorderManager: null as any,
-    sr: null as any,  // 语音识别实例
   },
 
   onLoad(options) {
     const { sessionId, hasPlayed } = options;
     this.setData({ hasPlayed: hasPlayed === 'true' });
     
-    // 加载会话信息
     this.loadSession();
-    
-    // 初始化录音管理器
-    this.setData({
-      recorderManager: wx.getRecorderManager(),
-    });
+    this.initRecorder();
+  },
+
+  /**
+   * 初始化录音管理器
+   */
+  initRecorder() {
+    const recorderManager = wx.getRecorderManager();
     
     // 录音结束回调
-    this.data.recorderManager.onStop((res: any) => {
+    recorderManager.onStop((res: any) => {
       this.handleRecordingEnd(res);
     });
+    
+    // 录音错误回调
+    recorderManager.onError((err: any) => {
+      console.error('录音错误:', err);
+      this.setData({ isRecording: false });
+      wx.showToast({ title: '录音失败', icon: 'none' });
+    });
+    
+    this.setData({ recorderManager });
   },
 
   async loadSession() {
     try {
-      // 优先从 storage 获取题目信息（开始游戏时保存的）
       const question = wx.getStorageSync('currentQuestion');
       const session = wx.getStorageSync('currentSession');
       
@@ -74,7 +88,6 @@ Page({
         });
         console.log('从 storage 加载游戏数据:', { question, session });
       } else {
-        // 如果 storage 没有，尝试从 API 获取
         const apiSession = await getCurrentSession();
         if (apiSession) {
           this.setData({
@@ -99,108 +112,121 @@ Page({
     });
   },
 
-  // 显示输入方式选择
   showInputModeSelector() {
     this.setData({ showInputSelector: true });
   },
 
-  // 隐藏输入方式选择
   hideInputModeSelector() {
     this.setData({ showInputSelector: false });
   },
 
-  // 输入文字
   onInputChange(e: any) {
     this.setData({ playerInput: e.detail.value });
   },
 
-  // 开始录音 - 暂时使用HTTP API方式
+  /**
+   * 开始录音
+   */
   startRecording() {
+    if (!this.data.recorderManager) {
+      wx.showToast({ title: '录音功能初始化失败', icon: 'none' });
+      return;
+    }
+    
     this.setData({ isRecording: true });
-    this.data.recorderManager.start({
-      duration: 60000,
-      sampleRate: 16000,
-      numberOfChannels: 1,
-      format: 'mp3',
-    });
+    this.data.recorderManager.start(RECORDER_CONFIG);
   },
 
-  // 停止录音
+  /**
+   * 停止录音
+   */
   stopRecording() {
+    if (!this.data.recorderManager) return;
+    
     this.setData({ isRecording: false });
     this.data.recorderManager.stop();
   },
 
-  // 录音结束处理
+  /**
+   * 录音结束处理
+   */
   async handleRecordingEnd(res: any) {
     wx.showLoading({ title: '语音识别中...', icon: 'loading' });
     
     try {
       // 读取音频文件并转为 base64
-      const fileInfo = await new Promise<string>((resolve, reject) => {
-        wx.getFileSystemManager().readFile({
-          filePath: res.tempFilePath,
-          encoding: 'base64',
-          success: (fileRes) => resolve(fileRes.data as string),
-          fail: reject,
-        });
-      });
+      const audioBase64 = await this.readAudioFile(res.tempFilePath);
       
       // 调用后端语音识别 API
-      const token = wx.getStorageSync('token');
-      const response = await new Promise<any>((resolve, reject) => {
-        wx.request({
-          url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/voice/recognize',
-          method: 'POST',
-          data: {
-            audio: fileInfo,
-            format: 'mp3',
-          },
-          header: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
-          },
-          success: (res: any) => resolve(res.data),
-          fail: reject,
-        });
-      });
+      const response = await this.callVoiceRecognitionAPI(audioBase64, RECORDER_CONFIG.format);
       
       wx.hideLoading();
       
-      if (response.code === 0 && response.data && response.data.text) {
+      if (response.code === 0 && response.data?.text) {
         this.setData({ playerInput: response.data.text });
         wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
-      } else if (response.data && response.data.fallback) {
-        // 语音识别失败，提示用户
-        wx.showModal({
-          title: '语音识别失败',
-          content: response.data.error || '请使用文字输入',
-          confirmText: '切换文字',
-          showCancel: true,
-          success: (modalRes) => {
-            if (modalRes.confirm) {
-              this.setData({ inputMode: 'TEXT' });
-            }
-          },
-        });
+      } else if (response.data?.fallback) {
+        this.handleRecognitionFailure(response.data.error);
       } else {
         throw new Error(response.message || '识别失败');
       }
     } catch (err: any) {
       wx.hideLoading();
       console.error('语音识别失败:', err);
-      wx.showModal({
-        title: '语音识别失败',
-        content: '请使用文字输入，或检查网络后重试',
-        confirmText: '切换文字',
-        showCancel: true,
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            this.setData({ inputMode: 'TEXT' });
-          }
-        },
-      });
+      this.handleRecognitionFailure(err.message);
     }
+  },
+
+  /**
+   * 读取音频文件为 Base64
+   */
+  readAudioFile(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      wx.getFileSystemManager().readFile({
+        filePath,
+        encoding: 'base64',
+        success: (res) => resolve(res.data as string),
+        fail: (err) => reject(new Error('读取音频文件失败')),
+      });
+    });
+  },
+
+  /**
+   * 调用语音识别 API
+   */
+  callVoiceRecognitionAPI(audioBase64: string, format: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const token = wx.getStorageSync('token');
+      
+      wx.request({
+        url: `${API_BASE_URL}/voice/recognize`,
+        method: 'POST',
+        data: { audio: audioBase64, format },
+        header: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        success: (res: any) => resolve(res.data),
+        fail: (err) => reject(new Error('网络请求失败')),
+      });
+    });
+  },
+
+  /**
+   * 处理识别失败
+   */
+  handleRecognitionFailure(errorMsg: string) {
+    wx.showModal({
+      title: '语音识别失败',
+      content: errorMsg || '请使用文字输入',
+      confirmText: '切换文字',
+      showCancel: true,
+      success: (modalRes) => {
+        if (modalRes.confirm) {
+          this.setData({ inputMode: 'TEXT' });
+        }
+      },
+    });
   },
 
   // 提交提问
@@ -229,7 +255,6 @@ Page({
         playerInput: '',
       });
 
-      // 判断是否命中
       if (result.sessionEnded) {
         this.handleGameWin(result.judgment.hitRate);
       }
@@ -299,17 +324,14 @@ Page({
     }
   },
 
-  // 关闭提示
   onCloseHint() {
     this.setData({ currentHint: '' });
   },
 
-  // 隐藏结束弹窗
   hideEndModal() {
     this.setData({ showEndModal: false });
   },
 
-  // 点击结束
   onEndGame() {
     this.setData({ showEndModal: true });
   },
@@ -318,7 +340,6 @@ Page({
   async onViewAnswer() {
     this.setData({ showEndModal: false, revealedAnswer: true });
     await this.finishGame('QUIT', true);
-    // 显示结果弹窗（包含汤底和加入题库按钮）
     this.setData({ showResultModal: true });
   },
 
@@ -326,7 +347,6 @@ Page({
   async onKeepMystery() {
     this.setData({ showEndModal: false, revealedAnswer: false });
     await this.finishGame('QUIT', false);
-    // 直接显示结束选择
     this.setData({ showEndChoice: true });
   },
 
@@ -335,10 +355,9 @@ Page({
     this.setData({ 
       gameResult: { hitRate, result: 'WIN' },
       showResultModal: true,
-      revealedAnswer: false,  // 默认不显示汤底
+      revealedAnswer: false,
       savedToBank: false,
     });
-    // 不立即结束游戏，让玩家选择
   },
 
   // 从结果弹窗查看汤底
@@ -347,7 +366,6 @@ Page({
     await this.finishGame('WIN', true);
   },
 
-  // 继续游戏（不查看汤底）
   onContinueGame() {
     this.setData({ showResultModal: false });
   },
@@ -364,7 +382,6 @@ Page({
       
       const res = await endGame(session.id, result, revealedAnswer);
       
-      // 更新游戏结果
       this.setData({
         gameResult: {
           ...this.data.gameResult,
@@ -398,21 +415,16 @@ Page({
     }
   },
 
-  // 不保存题目
   onSkipSave() {
     this.setData({ savedToBank: true });
   },
 
-  // 再来一局
   onPlayAgain() {
-    // 清除当前游戏数据
     wx.removeStorageSync('currentSession');
     wx.removeStorageSync('currentQuestion');
-    // 首页是 tabBar 页面，必须用 switchTab
     wx.switchTab({ url: '/pages/index/index' });
   },
 
-  // 返回首页
   onBackHome() {
     wx.removeStorageSync('currentSession');
     wx.removeStorageSync('currentQuestion');
