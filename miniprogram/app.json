@@ -53,6 +53,11 @@
       }
     ]
   },
+  "permission": {
+    "scope.record": {
+      "desc": "用于语音输入功能，将您的语音转换为文字进行游戏"
+    }
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

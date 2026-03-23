@@ -33,7 +33,7 @@ function isValidBase64(str: string): boolean {
 /**
  * 映射语音错误类型到 HTTP 状态码和错误码
  */
-function mapVoiceError(err: VoiceError): { httpStatus: number; errorCode: ErrorCode; message: string } {
+function mapVoiceError(err: VoiceError): { httpStatus: number; errorCode: number; message: string } {
   switch (err.type) {
     case VoiceErrorType.CONFIG_MISSING:
     case VoiceErrorType.CONFIG_INVALID:

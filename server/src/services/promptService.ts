@@ -95,17 +95,18 @@ class PromptService {
   }
 
   // 批量导入提示词
-  async importPrompts(category: QuestionCategory, prompts: string[]) {
+  async importPrompts(category: QuestionCategory, prompts: string[]): Promise<{ count: number }> {
     const data = prompts.map(prompt => ({
       category,
       prompt,
       generatedBy: 'AI_AUTO',
     }));
 
-    return prisma.promptLibrary.createMany({
+    const result = await prisma.promptLibrary.createMany({
       data,
-      skipDuplicates: true,
     });
+    
+    return { count: result.count };
   }
 
   // 获取提示词库统计
