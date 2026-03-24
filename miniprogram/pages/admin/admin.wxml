@@ -321,6 +321,7 @@
     </scroll-view>
     <view class="modal-actions">
       <button class="btn-cancel" bindtap="closeQuestionModal">取消</button>
+      <button class="btn-delete" bindtap="onDeleteQuestion" wx:if="{{editQuestion.id}}">删除</button>
       <button class="btn-save" bindtap="onSaveQuestion">保存</button>
     </view>
   </view>

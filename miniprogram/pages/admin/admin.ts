@@ -636,6 +636,43 @@ Page({
     this.setData({ showQuestionModal: false, editQuestion: {} });
   },
 
+  // 删除题目
+  onDeleteQuestion() {
+    const { editQuestion } = this.data;
+    
+    if (!editQuestion.id) {
+      wx.showToast({ title: '无法删除新题目', icon: 'none' });
+      return;
+    }
+    
+    wx.showModal({
+      title: '确认删除',
+      content: '删除后无法恢复，确定要删除这个题目吗？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await wx.request({
+              url: `https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/question/${editQuestion.id}`,
+              method: 'DELETE',
+              header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
+            });
+            
+            wx.showToast({ title: '删除成功', icon: 'success' });
+            this.closeQuestionModal();
+            
+            // 刷新题库列表
+            if (this.data.currentTab === 'questions') {
+              this.loadQuestions();
+            }
+          } catch (err: any) {
+            console.error('删除题目失败:', err);
+            wx.showToast({ title: '删除失败', icon: 'none' });
+          }
+        }
+      },
+    });
+  },
+
   stopPropagation() {},
 
   async onSaveQuestion() {

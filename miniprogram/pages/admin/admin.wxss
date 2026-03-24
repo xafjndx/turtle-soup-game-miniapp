@@ -417,7 +417,7 @@
 }
 
 /* 按钮样式 */
-.btn-cancel, .btn-save, .btn-edit, .btn-approve, .btn-reject {
+.btn-cancel, .btn-save, .btn-edit, .btn-approve, .btn-reject, .btn-delete {
   height: 72rpx;
   font-size: 26rpx;
   border-radius: 10rpx;
@@ -440,6 +440,11 @@
   color: #ff9800;
 }
 
+.btn-delete {
+  background: #ffebee;
+  color: #f44336;
+}
+
 .btn-approve {
   background: #e8f5e9;
   color: #4caf50;
@@ -450,7 +455,7 @@
   color: #f44336;
 }
 
-.btn-cancel::after, .btn-save::after, .btn-edit::after, .btn-approve::after, .btn-reject::after {
+.btn-cancel::after, .btn-save::after, .btn-edit::after, .btn-delete::after, .btn-approve::after, .btn-reject::after {
   border: none;
 }
 
@@ -496,8 +501,8 @@
   max-width: 650rpx;
 }
 
-/* 编辑弹窗表单 */
+/* 编辑弹窗表单 - 增加左右边距，使输入框与边界对称 */
 .modal-form {
-  padding: 20rpx 30rpx;
+  padding: 24rpx 50rpx; /* 左右边距从 30rpx 增加到 50rpx */
   max-height: 60vh;
 }
