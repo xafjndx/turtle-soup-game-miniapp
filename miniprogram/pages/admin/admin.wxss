@@ -289,27 +289,29 @@
 
 .modal-content {
   width: 100%;
+  max-width: 700rpx; /* 限制最大宽度 */
   max-height: 80vh;
   background: #fff;
   border-radius: 20rpx;
   overflow: hidden;
+  margin: 0 auto; /* 居中显示 */
 }
 
 .modal-title {
   font-size: 30rpx;
   font-weight: bold;
   text-align: center;
-  padding: 24rpx;
+  padding: 30rpx;
   border-bottom: 1rpx solid #eee;
 }
 
 .modal-body {
-  padding: 24rpx;
+  padding: 30rpx 50rpx; /* 增加左右边距到 50rpx */
   max-height: 50vh;
 }
 
 .modal-form {
-  padding: 24rpx;
+  padding: 30rpx 50rpx; /* 增加左右边距到 50rpx */
   max-height: 60vh;
 }
 
@@ -499,11 +501,11 @@
 }
 
 .question-modal {
-  max-width: 650rpx;
+  max-width: 700rpx; /* 增加弹窗最大宽度 */
 }
 
 /* 编辑弹窗表单 - 增加左右边距，使输入框与边界对称 */
 .modal-form {
-  padding: 24rpx 50rpx; /* 左右边距从 30rpx 增加到 50rpx */
+  padding: 30rpx 60rpx; /* 左右边距增加到 60rpx，内容更居中 */
   max-height: 60vh;
 }
