@@ -181,16 +181,39 @@ Page({
   // 加载用户列表
   async loadUsers() {
     try {
+      const token = wx.getStorageSync('token');
+      
       const res = await wx.request({
         url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/users',
         method: 'GET',
-        header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
+        header: { Authorization: `Bearer ${token}` },
       });
+      
       // @ts-ignore
-      const users = res.data?.data?.list || res.data?.data || [];
-      this.setData({ users, filteredUsers: users });
-    } catch (err) {
+      const responseData = res.data;
+      
+      // 检查响应码
+      if (responseData.code === 401) {
+        wx.showToast({ title: '登录已过期', icon: 'none' });
+        this.setData({ isLoggedIn: false });
+        return;
+      }
+      
+      const users = responseData?.data?.list || responseData?.data || [];
+      
+      console.log('加载用户列表:', users.length, '个用户');
+      
+      this.setData({ 
+        users, 
+        filteredUsers: users,
+      });
+      
+      if (users.length === 0) {
+        wx.showToast({ title: '暂无用户数据', icon: 'none' });
+      }
+    } catch (err: any) {
       console.error('加载用户失败:', err);
+      wx.showToast({ title: '加载失败：' + (err.message || '未知错误'), icon: 'none' });
     }
   },
 
