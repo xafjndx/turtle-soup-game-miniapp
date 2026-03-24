@@ -10,8 +10,8 @@ RUN apk add --no-cache openssl
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# 安装依赖并生成 Prisma Client（单独一层，避免缓存问题）
-RUN npm ci --only=production && \
+# 安装依赖并生成 Prisma Client（需要 devDependencies 用于构建）
+RUN npm install && \
     rm -rf node_modules/.prisma && \
     npx prisma generate
 
