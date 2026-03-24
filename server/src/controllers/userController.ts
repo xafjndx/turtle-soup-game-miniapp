@@ -34,9 +34,10 @@ export const login = [
           const wxAppId = process.env.WECHAT_APPID;
           const wxSecret = process.env.WECHAT_SECRET;
           
-          if (!wxAppId || !wxSecret || wxAppId === 'your-wechat-appid') {
+          if (!wxAppId || !wxSecret || wxAppId === 'your-wechat-appid' || wxSecret === 'your-wechat-secret') {
             // 微信配置未设置，返回错误
-            error(res, ErrorCode.INTERNAL_ERROR, '微信登录未配置，请联系管理员');
+            console.error('微信登录配置缺失：WECHAT_APPID 或 WECHAT_SECRET 未配置');
+            error(res, ErrorCode.INTERNAL_ERROR, '微信登录功能未配置，请使用用户名登录或联系管理员');
             return;
           }
           
