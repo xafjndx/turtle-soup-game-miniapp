@@ -1,13 +1,10 @@
 <!--pages/game/game.wxml-->
 <view class="container">
-  <!-- 自定义导航栏 -->
+  <!-- 自定义导航栏（无返回按钮） -->
   <view class="custom-navbar">
-    <view class="navbar-left" bindtap="onBack">
-      <text class="back-icon">←</text>
-      <text class="back-text">返回</text>
-    </view>
+    <view class="navbar-left-placeholder"></view>
     <view class="navbar-title">游戏中</view>
-    <view class="navbar-right"></view>
+    <view class="navbar-right-placeholder"></view>
   </view>
 
   <!-- 汤面展示 -->

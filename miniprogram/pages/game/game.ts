@@ -53,6 +53,19 @@ Page({
     this.initRecorder();
   },
 
+  // 禁止用户通过右上角菜单分享或退出
+  onShareAppMessage() {
+    return {
+      title: '海龟汤推理游戏',
+      path: '/pages/index/index',
+    };
+  },
+
+  // 禁止下拉刷新
+  onPullDownRefresh() {
+    // 不执行任何操作，阻止下拉刷新
+  },
+
   /**
    * 初始化录音管理器
    */
@@ -330,20 +343,6 @@ Page({
 
   hideEndModal() {
     this.setData({ showEndModal: false });
-  },
-
-  // 返回按钮处理
-  onBack() {
-    wx.showModal({
-      title: '确认退出',
-      content: '退出后游戏进度将不会保存，确定要退出吗？',
-      success: (res) => {
-        if (res.confirm) {
-          // 用户确认退出，返回上一页
-          wx.navigateBack({ delta: 1 });
-        }
-      },
-    });
   },
 
   onEndGame() {

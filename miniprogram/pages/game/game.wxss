@@ -8,7 +8,7 @@
   box-sizing: border-box;
 }
 
-/* 自定义导航栏 */
+/* 自定义导航栏（无返回按钮） */
 .custom-navbar {
   position: fixed;
   top: 0;
@@ -18,47 +18,22 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 30rpx;
   z-index: 1000;
   box-shadow: 0 2rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 
-.navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 12rpx 20rpx;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 12rpx;
-}
-
-.navbar-left:active {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.back-icon {
-  font-size: 40rpx;
-  color: #fff;
-  font-weight: bold;
-}
-
-.back-text {
-  font-size: 28rpx;
-  color: #fff;
+.navbar-left-placeholder,
+.navbar-right-placeholder {
+  width: 80rpx;
+  flex-shrink: 0;
 }
 
 .navbar-title {
   font-size: 32rpx;
   font-weight: bold;
   color: #fff;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.navbar-right {
-  width: 80rpx;
 }
 
 .surface-section {

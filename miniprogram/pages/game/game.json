@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "游戏中",
-  "navigationStyle": "default"
+  "navigationStyle": "custom",
+  "disableScroll": true
 }
