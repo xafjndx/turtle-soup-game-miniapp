@@ -192,6 +192,12 @@ Page({
       // @ts-ignore
       const responseData = res.data;
       
+      // 检查响应数据是否有效
+      if (!responseData) {
+        wx.showToast({ title: '响应数据为空', icon: 'none' });
+        return;
+      }
+      
       // 检查响应码
       if (responseData.code === 401) {
         wx.showToast({ title: '登录已过期', icon: 'none' });
@@ -230,6 +236,12 @@ Page({
       
       // @ts-ignore
       const responseData = res.data;
+      
+      // 检查响应数据是否有效
+      if (!responseData) {
+        wx.showToast({ title: '响应数据为空', icon: 'none' });
+        return;
+      }
       
       // 检查响应码
       if (responseData.code === 401) {
