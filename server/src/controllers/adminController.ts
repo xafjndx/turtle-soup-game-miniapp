@@ -349,8 +349,13 @@ export const getQuestions = [
       const { page = 1, pageSize = 20, category, status, source, keyword } = req.query;
 
       const where: any = {};
+      // 默认只查询 APPROVED 状态的题目（除非明确指定其他状态）
+      if (status) {
+        where.status = status;
+      } else {
+        where.status = 'APPROVED';
+      }
       if (category) where.category = category;
-      if (status) where.status = status;
       if (source) where.source = source;
       if (keyword) {
         where.OR = [

@@ -116,6 +116,7 @@
       
       <view class="table-container">
         <view class="table-header">
+          <text class="th th-index">序号</text>
           <text class="th th-category">分类</text>
           <text class="th th-surface">汤面</text>
           <text class="th th-status">状态</text>
@@ -123,6 +124,7 @@
         </view>
         <view class="table-body">
           <view class="table-row" wx:for="{{filteredQuestions}}" wx:key="id">
+            <text class="td td-index">{{index + 1}}</text>
             <text class="td td-category">{{item.categoryName}}</text>
             <text class="td td-surface">{{item.surfaceShort}}</text>
             <text class="td td-status status-{{item.status}}">{{item.statusName}}</text>

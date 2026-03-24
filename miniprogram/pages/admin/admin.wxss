@@ -246,6 +246,7 @@
 .th-time, .td-time { width: 140rpx; flex-shrink: 0; }
 .th-games, .td-games { width: 80rpx; flex-shrink: 0; text-align: center; }
 .th-rate, .td-rate { width: 100rpx; flex-shrink: 0; text-align: center; }
+.th-index, .td-index { width: 60rpx; flex-shrink: 0; text-align: center; font-weight: bold; }
 .th-category, .td-category { width: 100rpx; flex-shrink: 0; }
 .th-surface, .td-surface { flex: 1; min-width: 0; }
 .th-status, .td-status { width: 80rpx; flex-shrink: 0; text-align: center; }
