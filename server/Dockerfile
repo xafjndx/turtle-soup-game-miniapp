@@ -24,6 +24,9 @@ RUN npm run build
 # 创建启动脚本
 RUN printf '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js\n' > start.sh && chmod +x start.sh
 
+# 设置默认端口为 80
+ENV PORT=80
+
 # 暴露端口
 EXPOSE 80
 
