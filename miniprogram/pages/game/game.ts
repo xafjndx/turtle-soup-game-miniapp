@@ -226,7 +226,21 @@ Page({
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : '',
         },
-        success: (res: any) => resolve(res.data),
+        success: (res: any) => {
+          // 检查 HTTP 状态码
+          if (res.statusCode !== 200) {
+            reject(new Error(`请求失败：${res.statusCode}`));
+            return;
+          }
+          
+          // 检查业务响应码
+          const responseData = res.data;
+          if (responseData.code === 0) {
+            resolve(responseData.data);
+          } else {
+            reject(new Error(responseData.message || '语音识别失败'));
+          }
+        },
         fail: (err) => reject(new Error('网络请求失败')),
       });
     });
