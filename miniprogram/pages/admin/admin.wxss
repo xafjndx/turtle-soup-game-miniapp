@@ -460,7 +460,7 @@
 }
 
 .question-detail-modal .modal-body {
-  padding: 20rpx 30rpx;
+  padding: 20rpx 40rpx; /* 增加左右边距，从 30rpx 改为 40rpx */
 }
 
 .question-detail-modal .detail-row,
@@ -482,6 +482,8 @@
   line-height: 1.6;
   padding-left: 16rpx;
   display: block;
+  word-break: break-all; /* 防止长文本溢出 */
+  white-space: normal; /* 允许换行 */
 }
 
 .question-detail-modal .detail-section {

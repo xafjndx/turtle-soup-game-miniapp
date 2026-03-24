@@ -591,7 +591,7 @@ Page({
   stopPropagation() {},
 
   async onSaveQuestion() {
-    const { editQuestion } = this.data;
+    const { editQuestion, categoryIndex, categories } = this.data;
     
     // 验证必填字段
     if (!editQuestion.title || !editQuestion.title.trim()) {
@@ -604,6 +604,11 @@ Page({
     }
     if (!editQuestion.bottom || !editQuestion.bottom.trim()) {
       wx.showToast({ title: '请输入汤底', icon: 'none' });
+      return;
+    }
+    // 验证分类（必选项）
+    if (!editQuestion.category || !editQuestion.category.trim()) {
+      wx.showToast({ title: '请选择题目分类', icon: 'none' });
       return;
     }
 
