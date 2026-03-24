@@ -4,6 +4,9 @@
   padding: 24rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding-bottom: 100rpx;
+  overflow: hidden; /* 禁止整个页面滚动 */
+  display: flex;
+  flex-direction: column;
 }
 
 .logo-area {
@@ -153,7 +156,9 @@
 
 /* 账号选择区域 - 可滑动 */
 .user-scroll {
-  max-height: 400rpx;
+  height: 400rpx; /* 固定高度 */
+  overflow-y: scroll; /* 允许垂直滚动 */
+  -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
   margin-bottom: 16rpx;
 }
 
