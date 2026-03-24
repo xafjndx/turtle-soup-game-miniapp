@@ -183,9 +183,27 @@ Page({
       wx.hideLoading();
       
       // result 已经是 { text: '...' } 格式
-      if (result && result.text) {
-        this.setData({ playerInput: result.text });
-        wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
+      if (result) {
+        if (result.text && result.text.trim()) {
+          // 识别成功，有内容
+          this.setData({ playerInput: result.text.trim() });
+          wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
+        } else {
+          // 识别成功但无内容
+          wx.showModal({
+            title: '未识别到内容',
+            content: '没有听清楚，请重新录音或改用文字输入',
+            confirmText: '再试一次',
+            cancelText: '文字输入',
+            success: (modalRes) => {
+              if (modalRes.confirm) {
+                // 重试
+              } else {
+                this.setData({ inputMode: 'TEXT' });
+              }
+            },
+          });
+        }
       } else {
         throw new Error('识别失败，请重试');
       }
