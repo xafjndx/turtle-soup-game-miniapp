@@ -70,7 +70,6 @@ function validateConfig(): { valid: boolean; missing: string[] } {
 
 /**
  * 获取阿里云 NLS 配置
- * 注意：不再提供默认值，必须通过环境变量配置
  */
 function getAliyunConfig(): AliyunNlsConfig {
   return {
@@ -83,7 +82,7 @@ function getAliyunConfig(): AliyunNlsConfig {
 
 class VoiceService {
   private tokenCache: TokenCache | null = null;
-  private static readonly TOKEN_EXPIRE_BUFFER = 5 * 60 * 1000; // 5分钟缓冲
+  private static readonly TOKEN_EXPIRE_BUFFER = 5 * 60 * 1000; // 5 分钟缓冲
 
   /**
    * 检查服务是否可用
@@ -106,7 +105,7 @@ class VoiceService {
 
   /**
    * 获取临时 Token（带缓存）
-   * 阿里云 Token 有效期为 3600 秒（1小时）
+   * 阿里云 Token 有效期为 3600 秒（1 小时）
    */
   async getToken(): Promise<string> {
     const config = getAliyunConfig();
@@ -126,53 +125,93 @@ class VoiceService {
     }
 
     try {
+      // 使用阿里云 POP API 签名方式 v1
       const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
       const nonce = Math.random().toString(36).substring(2);
       
-      // 构造签名字符串
-      const params = `AccessKeyId=${config.accessKeyId}&Action=CreateToken&Format=JSON&RegionId=${config.region}&SignatureMethod=HMAC-SHA1&SignatureNonce=${nonce}&SignatureVersion=1.0&Timestamp=${encodeURIComponent(timestamp)}&Version=2019-02-28`;
-      const stringToSign = `GET&%2F&${encodeURIComponent(params)}`;
+      // 构造参数字符串（按字典序排序）
+      const params: Record<string, string> = {
+        AccessKeyId: config.accessKeyId,
+        Action: 'CreateToken',
+        Format: 'JSON',
+        RegionId: config.region,
+        SignatureMethod: 'HMAC-SHA1',
+        SignatureNonce: nonce,
+        SignatureVersion: '1.0',
+        Timestamp: timestamp,
+        Version: '2019-02-28',
+      };
+      
+      // 按字典序排序参数
+      const sortedKeys = Object.keys(params).sort();
+      const canonicalizedQueryString = sortedKeys
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&');
+      
+      // 构造待签名字符串
+      const stringToSign = `GET&%2F&${encodeURIComponent(canonicalizedQueryString)}`;
       
       // 计算 HMAC-SHA1 签名
       const signature = crypto
-        .createHmac('sha1', `${config.accessKeySecret}&`)
+        .createHmac('sha1', config.accessKeySecret + '&')
         .update(stringToSign)
         .digest('base64');
       
-      const tokenUrl = `https://nls-meta.${config.region}.aliyuncs.com/pop/2019-02-28/CreateToken`;
+      // 构建请求 URL
+      const url = 'https://nls-meta.cn-shanghai.aliyuncs.com/';
       
-      const response = await axios.get(tokenUrl, {
+      logger.info('请求阿里云 Token API', { 
+        url,
+        action: 'CreateToken',
+        timestamp,
+      });
+      
+      // 发送请求
+      const response = await axios.get(url, {
         params: {
-          AccessKeyId: config.accessKeyId,
-          Action: 'CreateToken',
-          Format: 'JSON',
-          RegionId: config.region,
-          SignatureMethod: 'HMAC-SHA1',
-          SignatureNonce: nonce,
-          SignatureVersion: '1.0',
-          Timestamp: timestamp,
-          Version: '2019-02-28',
+          ...params,
           Signature: signature,
         },
         timeout: 10000,
       });
       
-      if (response.data.Token?.Id && response.data.Token?.ExpireTime) {
-        // 缓存 Token，阿里云 Token 有效期 3600 秒
-        const expireTime = response.data.Token.ExpireTime * 1000; // 转换为毫秒
+      logger.info('阿里云 Token API 响应', { 
+        status: response.status,
+        hasData: !!response.data,
+        hasToken: !!(response.data?.Token || response.data?.data?.Token),
+      });
+      
+      // 处理响应（阿里云可能返回不同的格式）
+      let tokenData = response.data;
+      
+      // 兼容不同的响应格式
+      if (tokenData?.data) {
+        tokenData = tokenData.data;
+      }
+      
+      if (tokenData?.Token?.Id && tokenData?.Token?.ExpireTime) {
+        const tokenId = tokenData.Token.Id;
+        const expireTime = tokenData.Token.ExpireTime * 1000; // 转换为毫秒
+        
+        // 缓存 Token
         this.tokenCache = {
-          token: response.data.Token.Id,
+          token: tokenId,
           expireAt: expireTime,
         };
         
         logger.info('语音识别 Token 获取成功', { 
+          tokenId: tokenId.substring(0, 10) + '...',
           expiresIn: Math.floor((expireTime - Date.now()) / 1000) + '秒'
         });
         
-        return this.tokenCache.token;
+        return tokenId;
       }
       
+      logger.error('Token 响应格式错误', { 
+        responseData: JSON.stringify(response.data).substring(0, 500) 
+      });
       throw new VoiceError(VoiceErrorType.SERVICE_UNAVAILABLE, '获取 Token 响应格式错误');
+      
     } catch (error: any) {
       if (error instanceof VoiceError) {
         throw error;
@@ -180,14 +219,18 @@ class VoiceService {
       
       logger.error('获取语音识别 Token 失败:', {
         message: error.message,
-        response: error.response?.data,
+        code: error.code,
+        responseStatus: error.response?.status,
+        responseData: error.response?.data ? JSON.stringify(error.response.data).substring(0, 500) : 'N/A',
       });
       
       if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
-        throw new VoiceError(VoiceErrorType.NETWORK_ERROR, '网络连接失败');
+        throw new VoiceError(VoiceErrorType.NETWORK_ERROR, '网络连接失败，请检查服务器网络');
       }
       
-      throw new VoiceError(VoiceErrorType.SERVICE_UNAVAILABLE, '语音识别服务暂时不可用');
+      // 提供更详细的错误信息
+      const errorMsg = error.response?.data?.Message || error.response?.data?.message || error.message;
+      throw new VoiceError(VoiceErrorType.SERVICE_UNAVAILABLE, `获取 Token 失败：${errorMsg}`);
     }
   }
 
@@ -216,7 +259,7 @@ class VoiceService {
     // 验证音频格式
     const supportedFormats = ['pcm', 'wav', 'mp3'];
     if (!supportedFormats.includes(format.toLowerCase())) {
-      throw new VoiceError(VoiceErrorType.AUDIO_INVALID, `不支持的音频格式: ${format}，支持: ${supportedFormats.join(', ')}`);
+      throw new VoiceError(VoiceErrorType.AUDIO_INVALID, `不支持的音频格式：${format}，支持：${supportedFormats.join(', ')}`);
     }
 
     try {
@@ -290,7 +333,7 @@ class VoiceService {
 // 服务启动时检查配置
 const configStatus = validateConfig();
 if (!configStatus.valid) {
-  logger.warn(`语音识别服务配置不完整，缺少环境变量: ${configStatus.missing.join(', ')}`);
+  logger.warn(`语音识别服务配置不完整，缺少环境变量：${configStatus.missing.join(', ')}`);
 } else {
   logger.info('语音识别服务配置完整');
 }
