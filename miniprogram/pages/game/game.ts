@@ -23,6 +23,7 @@ Page({
     session: null as any,
     question: null as any,
     hasPlayed: false,
+    showPlayedNotice: false, // 玩过提示横幅
     
     // 游戏状态
     inputMode: 'TEXT' as 'VOICE' | 'TEXT',
@@ -47,7 +48,13 @@ Page({
 
   onLoad(options) {
     const { sessionId, hasPlayed } = options;
-    this.setData({ hasPlayed: hasPlayed === 'true' });
+    const played = hasPlayed === 'true';
+    
+    // 如果已玩过，显示提示横幅
+    this.setData({ 
+      hasPlayed: played,
+      showPlayedNotice: played 
+    });
     
     this.loadSession();
     this.initRecorder();
@@ -347,6 +354,16 @@ Page({
 
   onEndGame() {
     this.setData({ showEndModal: true });
+  },
+
+  // 继续游戏（关闭提示横幅）
+  onContinueGame() {
+    this.setData({ showPlayedNotice: false });
+  },
+
+  // 再来一局（返回抽题页面）
+  onRestartGame() {
+    wx.navigateBack({ delta: 1 });
   },
 
   // 查看汤底

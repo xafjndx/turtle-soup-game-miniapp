@@ -18,6 +18,15 @@
     <view class="surface-content">
       {{question.surface}}
     </view>
+    <!-- 玩过提示横幅（不遮挡汤面） -->
+    <view class="played-notice" wx:if="{{showPlayedNotice}}">
+      <text class="notice-icon">💡</text>
+      <text class="notice-text">你玩过该题目，可选择：</text>
+      <view class="notice-actions">
+        <button class="btn-continue" bindtap="onContinueGame">继续游戏</button>
+        <button class="btn-restart" bindtap="onRestartGame">再来一局</button>
+      </view>
+    </view>
   </view>
 
   <!-- 输入区域 -->
