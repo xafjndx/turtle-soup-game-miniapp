@@ -186,14 +186,28 @@ Page({
       const res = await wx.request({
         url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/users',
         method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
+        header: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
       
-      // @ts-ignore
-      const responseData = res.data;
-      
       // 调试日志
-      console.log('用户响应数据:', responseData);
+      console.log('用户请求完整响应:', res);
+      console.log('用户响应 statusCode:', res.statusCode);
+      console.log('用户响应 data:', res.data);
+      
+      // 检查 HTTP 状态码
+      if (res.statusCode !== 200) {
+        wx.showToast({ 
+          title: `请求失败：${res.statusCode}`, 
+          icon: 'none',
+          duration: 3000
+        });
+        return;
+      }
+      
+      const responseData = res.data;
       
       // 检查响应数据是否有效
       if (!responseData) {
@@ -234,14 +248,28 @@ Page({
       const res = await wx.request({
         url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/questions',
         method: 'GET',
-        header: { Authorization: `Bearer ${token}` },
+        header: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
       });
       
-      // @ts-ignore
-      const responseData = res.data;
-      
       // 调试日志
-      console.log('题库响应数据:', responseData);
+      console.log('题库请求完整响应:', res);
+      console.log('题库响应 statusCode:', res.statusCode);
+      console.log('题库响应 data:', res.data);
+      
+      // 检查 HTTP 状态码
+      if (res.statusCode !== 200) {
+        wx.showToast({ 
+          title: `请求失败：${res.statusCode}`, 
+          icon: 'none',
+          duration: 3000
+        });
+        return;
+      }
+      
+      const responseData = res.data;
       
       // 检查响应数据是否有效
       if (!responseData) {
