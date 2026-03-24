@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # 创建启动脚本
-RUN echo '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js' > start.sh && chmod +x start.sh
+RUN printf '#!/bin/sh\nnpx prisma migrate deploy\nnode dist/app.js\n' > start.sh && chmod +x start.sh
 
 # 暴露端口
 EXPOSE 80
