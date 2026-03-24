@@ -178,17 +178,16 @@ Page({
       const audioBase64 = await this.readAudioFile(res.tempFilePath);
       
       // 调用后端语音识别 API
-      const response = await this.callVoiceRecognitionAPI(audioBase64, RECORDER_CONFIG.format);
+      const result = await this.callVoiceRecognitionAPI(audioBase64, RECORDER_CONFIG.format);
       
       wx.hideLoading();
       
-      if (response.code === 0 && response.data?.text) {
-        this.setData({ playerInput: response.data.text });
+      // result 已经是 { text: '...' } 格式
+      if (result && result.text) {
+        this.setData({ playerInput: result.text });
         wx.showToast({ title: '识别成功', icon: 'success', duration: 1000 });
-      } else if (response.data?.fallback) {
-        this.handleRecognitionFailure(response.data.error);
       } else {
-        throw new Error(response.message || '识别失败');
+        throw new Error('识别失败，请重试');
       }
     } catch (err: any) {
       wx.hideLoading();
