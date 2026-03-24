@@ -217,6 +217,12 @@ Page({
     return new Promise((resolve, reject) => {
       const token = wx.getStorageSync('token');
       
+      console.log('语音识别请求：', { 
+        url: `${API_BASE_URL}/voice/recognize`,
+        format,
+        audioLength: audioBase64.length 
+      });
+      
       wx.request({
         url: `${API_BASE_URL}/voice/recognize`,
         method: 'POST',
@@ -226,8 +232,12 @@ Page({
           'Authorization': token ? `Bearer ${token}` : '',
         },
         success: (res: any) => {
+          console.log('语音识别响应 statusCode:', res.statusCode);
+          console.log('语音识别响应 data:', res.data);
+          
           // 检查 HTTP 状态码
           if (res.statusCode !== 200) {
+            console.error('HTTP 错误:', res.statusCode);
             reject(new Error(`请求失败：${res.statusCode}`));
             return;
           }
@@ -235,12 +245,17 @@ Page({
           // 检查业务响应码
           const responseData = res.data;
           if (responseData.code === 0) {
+            console.log('识别成功:', responseData.data);
             resolve(responseData.data);
           } else {
+            console.error('业务错误:', responseData);
             reject(new Error(responseData.message || '语音识别失败'));
           }
         },
-        fail: (err) => reject(new Error('网络请求失败')),
+        fail: (err) => {
+          console.error('网络请求失败:', err);
+          reject(new Error('网络请求失败'));
+        },
       });
     });
   },
