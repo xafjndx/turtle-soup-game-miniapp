@@ -7,11 +7,13 @@
     </view>
     <view class="info">
       <text class="name">{{userInfo.nickname || userInfo.username}}</text>
+    </view>
+    <view class="right-section">
       <view class="rank" bindtap="onViewLeaderboard">
         <text>排名 #{{userInfo.rank || '--'}}</text>
       </view>
+      <button class="btn-logout-top" bindtap="onLogout">退出登录</button>
     </view>
-    <button class="btn-logout-top" bindtap="onLogout">退出登录</button>
   </view>
 
   <!-- 统计数据 -->
