@@ -126,7 +126,8 @@ class VoiceService {
 
     try {
       // 使用阿里云 POP API 签名方式 v1
-      const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+      // 阿里云要求 ISO8601 格式：YYYY-MM-DDThh:mm:ssZ
+      const timestamp = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
       const nonce = Math.random().toString(36).substring(2);
       
       // 构造参数字符串（按字典序排序）
