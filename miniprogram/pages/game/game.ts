@@ -332,6 +332,20 @@ Page({
     this.setData({ showEndModal: false });
   },
 
+  // 返回按钮处理
+  onBack() {
+    wx.showModal({
+      title: '确认退出',
+      content: '退出后游戏进度将不会保存，确定要退出吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 用户确认退出，返回上一页
+          wx.navigateBack({ delta: 1 });
+        }
+      },
+    });
+  },
+
   onEndGame() {
     this.setData({ showEndModal: true });
   },
