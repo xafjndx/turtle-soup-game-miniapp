@@ -8,6 +8,7 @@
 .user-section {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 30rpx;
   background: linear-gradient(135deg, #667eea, #764ba2);
   padding: 40rpx;
@@ -15,12 +16,20 @@
   margin-bottom: 30rpx;
 }
 
+/* 左侧区域：头像 + 用户名 */
+.left-section {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
 .avatar {
-  width: 120rpx;
-  height: 120rpx;
+  width: 100rpx;
+  height: 100rpx;
   border-radius: 50%;
   overflow: hidden;
   border: 4rpx solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .avatar image {
@@ -28,15 +37,18 @@
   height: 100%;
 }
 
-.info {
-  flex: 1;
+.user-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .name {
-  font-size: 36rpx;
+  font-size: 32rpx;
   font-weight: bold;
   color: #fff;
   display: block;
+  white-space: nowrap;
 }
 
 /* 右侧区域：排名 + 退出登录 */
@@ -45,6 +57,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16rpx;
+  flex-shrink: 0;
 }
 
 .rank {
@@ -57,17 +70,19 @@
   white-space: nowrap;
 }
 
-/* 退出登录按钮 - 排名下方 */
+/* 退出登录按钮 - 排名下方，缩小到字体大小 */
 .btn-logout-top {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
   font-size: 24rpx;
-  padding: 12rpx 24rpx;
-  border-radius: 30rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
   border: 2rpx solid rgba(255, 255, 255, 0.3);
   height: auto;
   line-height: 1.4;
   white-space: nowrap;
+  min-width: auto;
+  width: auto;
 }
 
 .btn-logout-top::after {

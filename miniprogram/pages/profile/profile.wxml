@@ -1,18 +1,20 @@
 <!--pages/profile/profile.wxml-->
 <view class="container">
-  <!-- 用户信息 - 退出按钮移到右上角 -->
+  <!-- 用户信息区域 -->
   <view class="user-section">
-    <view class="avatar">
-      <image src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
-    </view>
-    <view class="info">
-      <text class="name">{{userInfo.nickname || userInfo.username}}</text>
+    <view class="left-section">
+      <view class="avatar">
+        <image src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}" mode="aspectFill" />
+      </view>
+      <view class="user-info">
+        <text class="name">{{userInfo.nickname || userInfo.username}}</text>
+      </view>
     </view>
     <view class="right-section">
       <view class="rank" bindtap="onViewLeaderboard">
         <text>排名 #{{userInfo.rank || '--'}}</text>
       </view>
-      <button class="btn-logout-top" bindtap="onLogout">退出登录</button>
+      <button class="btn-logout-top" bindtap="onLogout">退出</button>
     </view>
   </view>
 
