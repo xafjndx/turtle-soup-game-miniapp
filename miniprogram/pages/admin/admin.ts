@@ -192,6 +192,9 @@ Page({
       // @ts-ignore
       const responseData = res.data;
       
+      // 调试日志
+      console.log('用户响应数据:', responseData);
+      
       // 检查响应数据是否有效
       if (!responseData) {
         wx.showToast({ title: '响应数据为空', icon: 'none' });
@@ -236,6 +239,9 @@ Page({
       
       // @ts-ignore
       const responseData = res.data;
+      
+      // 调试日志
+      console.log('题库响应数据:', responseData);
       
       // 检查响应数据是否有效
       if (!responseData) {
