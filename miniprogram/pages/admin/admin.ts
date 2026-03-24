@@ -220,13 +220,27 @@ Page({
   // 加载题库列表
   async loadQuestions() {
     try {
+      const token = wx.getStorageSync('token');
+      
       const res = await wx.request({
         url: 'https://turtle-soup-server-235023-9-1412292669.sh.run.tcloudbase.com/api/admin/questions',
         method: 'GET',
-        header: { Authorization: `Bearer ${wx.getStorageSync('token')}` },
+        header: { Authorization: `Bearer ${token}` },
       });
+      
       // @ts-ignore
-      const rawQuestions = res.data?.data?.list || [];
+      const responseData = res.data;
+      
+      // 检查响应码
+      if (responseData.code === 401) {
+        wx.showToast({ title: '登录已过期', icon: 'none' });
+        this.setData({ isLoggedIn: false });
+        return;
+      }
+      
+      const rawQuestions = responseData?.data?.list || responseData?.data || [];
+      
+      console.log('加载题库列表:', rawQuestions.length, '个题目');
       
       // 处理题目数据
       const questions: Question[] = rawQuestions.map((item: any) => ({
@@ -234,11 +248,21 @@ Page({
         categoryName: this.getCategoryName(item.category),
         statusName: this.getStatusName(item.status),
         surfaceShort: item.surface.length > 20 ? item.surface.substring(0, 20) + '...' : item.surface,
+        hintsText: item.hints ? (Array.isArray(item.hints) ? item.hints.join(' | ') : item.hints) : '无提示',
+        keywordsText: item.keywords ? (Array.isArray(item.keywords) ? item.keywords.join(', ') : item.keywords) : '无关键词',
       }));
       
-      this.setData({ questions, filteredQuestions: questions });
-    } catch (err) {
+      this.setData({ 
+        questions, 
+        filteredQuestions: questions,
+      });
+      
+      if (questions.length === 0) {
+        wx.showToast({ title: '题库为空，可添加题目', icon: 'none' });
+      }
+    } catch (err: any) {
       console.error('加载题目失败:', err);
+      wx.showToast({ title: '加载失败：' + (err.message || '未知错误'), icon: 'none' });
     }
   },
 
